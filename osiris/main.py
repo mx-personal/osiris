@@ -1,5 +1,5 @@
-from osiris.agent import Agent
-from context import Clock
+from .agent import Agent
+from .context import Clock
 
 if __name__ == "__main__":
     clock = Clock()

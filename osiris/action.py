@@ -1,5 +1,5 @@
-import functions as func
 import datetime as dt
+from . import functions as func
 
 
 class ActionGeneric(object):
