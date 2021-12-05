@@ -1,0 +1,13 @@
+type_profile;fail_profile;parameter;value
+infant;weak;infant_y0;0.1
+infant;weak;infant_scale;0.9
+base;weak;base_y0;0.01
+wearout;weak;wearout_scale;10
+infant;medium;infant_y0;0.1
+infant;medium;infant_scale;0.9
+base;medium;base_y0;0.01
+wearout;medium;wearout_scale;10
+infant;strong;infant_y0;0.1
+infant;strong;infant_scale;0.9
+base;strong;base_y0;0.01
+wearout;strong;wearout_scale;10

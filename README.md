@@ -1,1 +1,1 @@
-# osiris
+OSIRIS = Open Simplistic Inference on Relationships in an Interactive Simulation
