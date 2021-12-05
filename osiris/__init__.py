@@ -1,1 +1,1 @@
-import osiris.main
+import osiris.__main__
