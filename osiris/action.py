@@ -1,5 +1,5 @@
 import datetime as dt
-from . import functions as func
+from osiris import functions as func
 
 
 class ActionGeneric(object):

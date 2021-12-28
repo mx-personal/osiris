@@ -1,5 +1,5 @@
 import pandas as pd
-from . import action
+from osiris import action
 from plotly import express as px
 import datetime as dt
 from dateutil import relativedelta

@@ -1,15 +1,15 @@
-from .agent import Agent
-from .context import Clock
-
+from osiris.agent import Agent
+from osiris.context import Clock
+import pdb
 
 def main():
     clock = Clock()
-    koro = Agent("koro",sim_step=clock.time_step)
+    koro = Agent("koro", sim_step=clock.time_step)
     for i in range(24*10*10):
         koro.pick_action(clock.time)
         clock.tick()
-    koro.display_results()
-    import pdb; pdb.set_trace()
+    pdb.set_trace()
+    # koro.display_results()
 
 
 if __name__ == "__main__":
