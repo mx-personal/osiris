@@ -33,20 +33,19 @@ class Controller():
 
     def run_simulation(self, event):
         results = self.model.simulate()
-        print(results)
         x = results['clock']['ts']
         series_commod = []
         series_commod.append(("hunger", results['commod']['hunger']))
         series_commod.append(("energy", results['commod']['energy']))
         series_commod.append(("fun", results['commod']['fun']))
 
-        series_actions = []
-        series_actions.append(("sleep", results['actions']['sleep']))
-        series_actions.append(("eat", results['actions']['eat']))
-        series_actions.append(("work", results['actions']['work']))
-        series_actions.append(("watch tv", results['actions']['watch tv']))
+        # series_actions = []
+        # series_actions.append(("sleep", results['actions']['sleep']))
+        # series_actions.append(("eat", results['actions']['eat']))
+        # series_actions.append(("work", results['actions']['work']))
+        # series_actions.append(("watch tv", results['actions']['watch tv']))
 
-        self.view.graph_panel.plot_series_2(x, series_commod, series_actions)
+        self.view.graph_panel.plot_series(x, series_commod)
 
 
 def main():
