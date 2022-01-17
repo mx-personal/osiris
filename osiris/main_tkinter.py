@@ -1,22 +1,6 @@
-from osiris.model.agent import Agent
-from osiris.model.context import Clock
-import osiris.model.context as context
-import osiris.view as view
+import osiris.view_tkinter as view
+from osiris.model.model import Model
 import tkinter as tk
-
-class Model():
-    def __init__(self):
-        pass
-
-    def simulate(self):
-        clock = Clock()
-        historian = context.Historian()
-        agent = Agent("agent", sim_step=clock.time_step)
-        for i in range(24*10*10):
-            agent.pick_action(clock.time)
-            historian.update_log(id_agent=1, agent_state=agent.current_state, clock_state=clock.current_state)
-            clock.tick()
-        return historian.log
 
 
 class Controller():

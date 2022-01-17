@@ -1,6 +1,6 @@
 import tkinter as Tk
-from tests.test_vmc.model import Model
-from tests.test_vmc.view import View
+from tests.test_vmc_tkinter.model import Model
+from tests.test_vmc_tkinter.view import View
 
 
 class Controller():

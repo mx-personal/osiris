@@ -40,6 +40,9 @@ class Clock(object):
 
     def tick(self):
         self.time += self.time_step
+        self.period_day = self.get_period_day()
+        self.period_week = self.get_period_week()
+        self.period_year = self.get_period_year()
 
     @property
     def current_state(self):
