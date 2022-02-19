@@ -10,5 +10,5 @@ setup(
   keywords=['osiris'],   # Keywords that define your package best
   include_package_data=True,
   packages=find_packages(),   # Chose the same as "name"
-  package_data={'model': ['*.txt', '*.csv']},
+  package_data={'osiris': ['*.txt', '*.csv']},
 )
