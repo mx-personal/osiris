@@ -4,7 +4,7 @@ from dateutil import relativedelta
 
 
 class Agent (object):
-    def __init__(self, name: str, sim_step:relativedelta.relativedelta):
+    def __init__(self, name: str, sim_step: relativedelta.relativedelta):
         self.name = name
         self.commodities = {
             'hunger': 50,

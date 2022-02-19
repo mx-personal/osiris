@@ -30,10 +30,10 @@ _PERIODS_YEAR = {
 
 
 class Clock(object):
-    def __init__(self):
-        self.t0 = dt.datetime(2000, 1, 1, 0, 0, 0)
+    def __init__(self, ts_start: dt.datetime, time_step: relativedelta):
+        self.t0 = ts_start
         self.time = self.t0
-        self.time_step = relativedelta(minutes=10)
+        self.time_step = time_step
         self.period_day = self.get_period_day()
         self.period_week = self.get_period_week()
         self.period_year = self.get_period_year()
