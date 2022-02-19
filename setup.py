@@ -10,5 +10,5 @@ setup(
   url='https://github.com/mx-personal/osiris',   # Provide either the link to your github or to your website
   keywords=['osiris'],   # Keywords that define your package best
   include_package_data=True,
-  package_data={'': ['*.txt', '*.csv','*.py']},
+  package_data={'': ['*.txt', '*.csv']},
 )
