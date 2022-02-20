@@ -10,7 +10,6 @@ from dateutil.relativedelta import relativedelta
 import json
 from dash import dash_table
 from dash_extensions.enrich import DashProxy, MultiplexerTransform
-
 from osiris.model.model import Model
 
 app = DashProxy(
