@@ -1,0 +1,2 @@
+include osiris\parameters\equipments.csv
+include osiris\requirements.txt

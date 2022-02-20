@@ -1,12 +1,10 @@
-import pandas as pd
-from . import action
-from plotly import express as px
+from osiris.model import action
 import datetime as dt
 from dateutil import relativedelta
 
 
 class Agent (object):
-    def __init__(self, name: str, sim_step:relativedelta.relativedelta):
+    def __init__(self, name: str, sim_step: relativedelta.relativedelta):
         self.name = name
         self.commodities = {
             'hunger': 50,
@@ -55,37 +53,18 @@ class Agent (object):
         }
 
         self._log = []
+        self.current_action = None
 
     @property
-    def log(self):
-        return pd.DataFrame(
-            data=self._log,
-            columns=pd.MultiIndex.from_tuples(tuples=self._log[0].keys(), names=['category','series']),
-        )
-
-    def _update_log(self, ts, action_picked, actions):
-        data_mux = {('meta', 'ts'): ts, ('meta',' state'):self.state, ('meta', 'action picked'): action_picked}
+    def current_state(self) -> {}:
+        data_mux = {('meta', ' state'): self.state, ('meta', 'action picked'): self.current_action}
         for dic, name in [(self.commodities, 'commod'), (self.signals_int, 'signals int')]:
             for k in dic:
                 data_mux[(name, k)] = dic[k]
-        data_mux[('meta', 'action picked')] = action_picked.name
-        for action in actions:
-            data_mux[('actions', action.name)] = int(action.name == action_picked.name)
-        self._log.append(data_mux)
-
-    def display_results(self):
-        df_commod = self.log['commod']
-        df_commod['ts'] = self.log['meta']['ts']
-        df_commod = pd.melt(df_commod, id_vars=['ts'], value_vars=[col for col in df_commod.columns if col != 'ts'])
-        fig_commod = px.line(df_commod, x='ts', y='value', color='series')
-
-        df_actions = self.log['actions']
-        df_actions['ts'] = self.log['meta']['ts']
-        df_actions = pd.melt(df_actions, id_vars=['ts'], value_vars=[col for col in df_actions.columns if col != 'ts'])
-        fig_actions = px.bar(df_actions, x='ts', y='value', color='series')
-
-        fig_commod.show()
-        fig_actions.show()
+        data_mux[('meta', 'action picked')] = self.current_action.name
+        for action in self.actions:
+            data_mux[('actions', action.name)] = int(action.name == self.current_action.name)
+        return data_mux
 
     def update_signals_int(self, ts):
         # Simulates serotonine secretion in circadian cycle
@@ -101,8 +80,8 @@ class Agent (object):
         for action in self.actions:
             if action.name == name: return action
 
-    def pick_action(self,ts):
-        utils = [action.utility(ts,self.state,self.signals_int,self.commodities) for action in self.actions]
+    def pick_action(self, ts):
+        utils = [action.utility(ts, self.state, self.signals_int, self.commodities) for action in self.actions]
         action_picked = self.actions[utils.index(max(utils))]
         try:
             self.update_commodities(action_picked.rw_commod)
@@ -110,7 +89,7 @@ class Agent (object):
             import pdb;pdb.set_trace()
         self.update_commodities(self.update_time)
         self.state = action_picked.name
-        self._update_log(ts=ts,action_picked=action_picked,actions=self.actions)
+        self.current_action = action_picked
 
     def update_commodities(self,update:{}):
         for stat in update:
