@@ -2,7 +2,6 @@ import dash
 from dash import dcc
 from dash import html
 import dash_bootstrap_components as dbc
-from osiris.model.model import Model
 import pandas as pd
 import plotly.express as px
 from dash.dependencies import Input, Output, State
@@ -11,6 +10,8 @@ from dateutil.relativedelta import relativedelta
 import json
 from dash import dash_table
 from dash_extensions.enrich import DashProxy, MultiplexerTransform
+
+from osiris.model.model import Model
 
 app = DashProxy(
     __name__,
@@ -100,6 +101,5 @@ def run_simulation(n_clicks):
     })
 
 
-if __name__ == "__main__":
+def run_server():
     app.run_server(debug=True)
-
