@@ -1,0 +1,32 @@
+#configurations for agents and actions
+agent:
+    commod_start:
+        hunger: 50
+        energy: 100
+        fun: 100
+    state_start: awake
+    actions:
+        work:
+#            hours_working:
+#                0: [(9, 13), (14, 18)],
+#                1: [(9, 13), (14, 18)],
+#                2: [(9, 13)],
+#                3: [(9, 13), (14, 18)],
+#                4: [(9, 13), (14, 18)],
+#                5: [],
+#                6: [],
+            pay: 3000/12/4/40
+            rw_commod:
+                fun: -4
+        sleep:
+            energy_rate: 10
+        eat:
+            thresh_full: 50
+            fill_rate: 40
+        relax:
+            name: watch tv
+            rw:
+                fun: 10
+    update_time:
+        hunger: -4
+        energy: -4

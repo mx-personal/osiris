@@ -22,3 +22,7 @@ modified: '2021-09-05T16:46:52.948Z'
 + [ ] Add a trade-off meaning vs enjoyment system
 + [ ] Add a "learning from experience" mechanism (see hidden Markos model and reinforcement learning)
 
+### Scratchpad - parameters to configurise
++ [ ] Internal action parameters, i.e.  risk profile, effort_in, effort_out (remake into single elasticity factor?), rewards
++ [ ] Agent parameters, i.e. starting values (commodities, signals, hours_working, actions parameters)
++ [ ] Anything in context?

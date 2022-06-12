@@ -1,17 +1,8 @@
-from threading import Timer
-import webbrowser
+from osiris.model.model import Model
+from dateutil.relativedelta import relativedelta
+import datetime as dt
 
-import dash
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-server = app.server
-app.config.suppress_callback_exceptions = True
-port = 500
+model = Model()
+results = model.simulate(ts_start=dt.datetime(year=2000,month=1,day=1), time_step=relativedelta(minutes=10))
 
-def open_browser():
-    webbrowser.open_new("http://localhost:{}".format(port))
-
-
-if __name__ == "__main__":
-    Timer(1, open_browser).start()
-    app.run_server(debug=False, port=port)
+import pdb;pdb.set_trace()
