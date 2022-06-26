@@ -19,25 +19,82 @@ app = DashProxy(
     external_stylesheets=[dbc.themes.COSMO]
 )
 
+
+# TODO Check out dbc offcanvas, dbc accordion, dbc form, navbar, spinner
+
 app.layout = dbc.Container([
-    dbc.Row(html.H1("Osiris"),align="start"),
-    dbc.Row(html.H4("By Neko - prototype version")),
-    dbc.Row([
-        dbc.Col([
+    dbc.Tabs(id='main-tabs', children=[
+        dcc.Tab(id='tab-config', label='Configuration panel', children=[
             dbc.Button("Import config", id="button-import-config", color="secondary"),
             dbc.Button("Export current config", id="button-export-config", color="secondary"),
             dbc.Button("Run simulation", id="button-run-simulation", color="primary"),
-            dbc.Row(html.H5("config panel")),
+            html.H5("Agent parameters"),
+            dbc.Row([
+                dbc.Col([html.P("Starting hunger")], width=3),
+                dbc.Col(dbc.Input(id='config-hunger', type='number', placeholder="Input number"))
             ]),
-        dbc.Col([
-            dbc.DropdownMenu(label="Results", children=[
-                dbc.DropdownMenuItem("Statistics", id="menu-display-statistics"),
-                dbc.DropdownMenuItem("Graphs", id="menu-display-graphs"),
+            dbc.Row([
+                dbc.Col([html.P("Starting energy")], width=3),
+                dbc.Col(dbc.Input(id='config-energy', type='number', placeholder="Input number"))
             ]),
-            html.Div(id="container-results")
+            dbc.Row([
+                dbc.Col([html.P("Starting fun")], width=3),
+                dbc.Col(dbc.Input(id='config-fun', type='number', placeholder="Input number"))
+            ]),
+            dbc.Row([
+                dbc.Col([html.P("Reward work - Fun")], width=3),
+                dbc.Col(dbc.Input(id='config-rw-work-fun', type='number', placeholder="Input number"))
+            ]),
+            dbc.Row([
+                dbc.Col([html.P("Salary (€/year)")], width=3),
+                dbc.Col(dbc.Input(id='config-salary', type='number', placeholder="Input number"))
+            ]),
+            dbc.Row([
+                dbc.Col([html.P("Reward sleep - Energy")], width=3),
+                dbc.Col(dbc.Input(id='config-rw-sleep-energy', type='number', placeholder="Input number"))
+            ]),
+            dbc.Row([
+                dbc.Col([html.P("Parameter eat - Threshold full")], width=3),
+                dbc.Col(dbc.Input(id='config-eat-thresh-full', type='number', placeholder="Input number"))
+            ]),
+            dbc.Row([
+                dbc.Col([html.P("Parameter eat - Fill rate")], width=3),
+                dbc.Col(dbc.Input(id='config-eat-fill-rate', type='number', placeholder="Input number"))
+            ]),
+            dbc.Row([
+                dbc.Col([html.P("Parameter relax - Reward Fun")], width=3),
+                dbc.Col(dbc.Input(id='config-relax-rw-fun', type='number', placeholder="Input number"))
+            ]),
+            dbc.Row([
+                dbc.Col([html.P("Time impact - Hunger")], width=3),
+                dbc.Col(dbc.Input(id='config-time-hunger', type='number', placeholder="Input number"))
+            ]),
+            dbc.Row([
+                dbc.Col([html.P("Time impact - Energy")], width=3),
+                dbc.Col(dbc.Input(id='config-time-energy', type='number', placeholder="Input number"))
+            ]),
         ]),
+        dcc.Tab(id='tab-results', label='Results', children=[
+            dbc.Row(html.H1("Osiris"), align="start"),
+            dbc.Row(html.H4("By Umbriel Draken - prototype version")),
+            dbc.Row([
+                dbc.Col([
+                    dbc.Row([
+                        html.Div(id='configuration panel', children=[
+                        ]),
+                    ]),
+                ]),
+                dbc.Col([
+                    dbc.DropdownMenu(label="Results", children=[
+                        dbc.DropdownMenuItem("Statistics", id="menu-display-statistics"),
+                        dbc.DropdownMenuItem("Graphs", id="menu-display-graphs"),
+                    ]),
+                    html.Div(id="container-results")
+                ]),
+            ]),
+            dcc.Store(id="store-results"),
         ]),
-    dcc.Store(id="store-results"),
+    ]),
 ])
 
 
@@ -110,4 +167,4 @@ def open_browser():
 
 if __name__ == "__main__":
     Timer(1, open_browser).start()
-    app.run_server(debug=True, port=port, use_reloader=False)
+    app.run_server(debug=True, port=port, usereloader=False)
