@@ -1,0 +1,14 @@
+# Visual elements configuration
+start-commod-hunger:  {'title': 'hunger-0', 'type': 'number', 'group': 'Starting state', 'tooltip': 'Initial hunger value'}
+start-commod-energy: {'title': 'energy-0', 'type': 'number', 'group': 'Starting state', 'tooltip': 'Initial energy value'}
+start-commod-fun: {'title': 'fun-0', 'type': 'number', 'group': 'Starting state', 'tooltip': 'Initial fun value'}
+start-state: {'title': 'state-0', 'type': 'string', 'group': 'Starting state', 'tooltip': 'Initial state (awake/asleep)'}
+work-pay: {'title': 'pay', 'type': 'number', 'group': 'Actions', 'tooltip': 'Annual salary'}
+work-rw-fun: {'title': 'work-reward (fun)', 'type': 'number', 'group': 'Actions'}
+sleep-energy-rate: {'title': 'sleep-reward (energy)', 'type': 'number', 'group': 'Actions'}
+eat-thres-full: {'title': 'eat-threshold', 'type': 'number', 'group': 'Actions'}
+eat-fill-rate: {'title': 'eat-fill-rate', 'type': 'number', 'group': 'Actions'}
+relax-name: {'title': 'relax-name', 'type': 'string', 'group': 'Actions'}
+relax-rw-fun: {'title': 'relax-reward (fun)', 'type': 'number', 'group': 'Actions'}
+time-rw-hunger: {'title': 'time-reward (hunger)', 'type': 'number', 'group': 'Actions'}
+time-rw-energy: {'title': 'time-reward (energy)', 'type': 'number', 'group': 'Actions'}

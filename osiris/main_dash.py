@@ -167,4 +167,5 @@ def open_browser():
 
 if __name__ == "__main__":
     Timer(1, open_browser).start()
-    app.run_server(debug=True, port=port, usereloader=False)
+    # app.run_server(debug=True, port=port, usereloader=False)
+    app.run_server(debug=True, port=port, use_reloader=False)

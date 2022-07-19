@@ -25,3 +25,7 @@ class Model():
             clock.tick()
         return historian.log
 
+
+if __name__ == "__main__":
+    model = Model()
+    model.simulate(ts_start=dt.datetime(year=2000,month=1,day=1), time_step=relativedelta.relativedelta(minutes=10))

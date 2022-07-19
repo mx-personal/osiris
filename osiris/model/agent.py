@@ -3,6 +3,7 @@ import datetime as dt
 from dateutil import relativedelta
 import yaml
 
+
 class Agent (object):
     def __init__(self, name: str, sim_step: relativedelta.relativedelta, **kwargs):
         conf_commod_start = kwargs.pop("commod_start")
@@ -61,7 +62,42 @@ class Agent (object):
     def from_config_file(cls, name: str, sim_step: relativedelta.relativedelta, path: str):
         with open(path) as f:
             config = yaml.safe_load(f)
-        return Agent(name, sim_step, **config['agent'])
+        # return Agent(name, sim_step, **config['agent'])
+        # TODO Technical debt, find a way to better pass information from config to agent
+        config = config['agent']
+        return Agent(
+            name,
+            sim_step,
+            commod_start={
+                'hunger': config['start-commod-hunger'],
+                'energy': config['start-commod-energy'],
+                'fun': config['start-commod-fun'],
+            },
+            state_start=config['start-state'],
+            actions={
+                'work': {
+                    'pay': config['work-pay'],
+                    'rw_commod': {
+                        'fun': config['work-rw-fun']
+                    },
+                },
+                'sleep': {'energy_rate': config['sleep-energy-rate']},
+                'eat': {
+                    'thresh_full': config['eat-thres-full'],
+                    'fill_rate': config['eat-fill-rate'],
+                },
+                'relax': {
+                    'name': config['relax-name'],
+                    'rw': {
+                        'fun': config['relax-rw-fun']
+                    },
+                },
+            },
+            update_time={
+                    'hunger':config['time-rw-hunger'],
+                    'energy':config['time-rw-energy'],
+            },
+        )
 
     @property
     def current_state(self) -> {}:
