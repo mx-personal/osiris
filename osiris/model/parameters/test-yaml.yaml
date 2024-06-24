@@ -1,0 +1,4 @@
+mapping: [name_var,id_visual,type,group,tooltip]
+items:
+    - [start-hunger, param-start-hunger, number, intial-state, "Start hunger, varies between 1 and 100"]
+    

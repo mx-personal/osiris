@@ -1,0 +1,15 @@
+#configurations for agents and actions
+agent:
+    start-commod-hunger: 50
+    start-commod-energy: 100
+    start-commod-fun: 100
+    start-state: awake
+    work-pay: 3000
+    work-rw-fun: -4
+    sleep-energy-rate: 10
+    eat-thres-full: 50
+    eat-fill-rate: 40
+    relax-name: "watch tv"
+    relax-rw-fun: 10
+    time-rw-hunger: -4
+    time-rw-energy: -4

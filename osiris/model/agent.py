@@ -1,20 +1,22 @@
 from osiris.model import action
 import datetime as dt
 from dateutil import relativedelta
+import yaml
 
 
 class Agent (object):
-    def __init__(self, name: str, sim_step: relativedelta.relativedelta):
+    def __init__(self, name: str, sim_step: relativedelta.relativedelta, **kwargs):
+        conf_commod_start = kwargs.pop("commod_start")
+        conf_state_start = kwargs.pop("state_start")
+        conf_actions = kwargs.pop("actions")
+        conf_update_time = kwargs.pop("update_time")
+
         self.name = name
-        self.commodities = {
-            'hunger': 50,
-            'energy': 100,
-            'fun': 100
-        }
-        self.signals_int = {
-            'drowsy': -1,
-        }
-        self.state = 'awake'
+        self.commodities = conf_commod_start
+        self.state = conf_state_start
+        self.signals_int = {'drowsy': -1}
+        self._log = []
+        self.current_action = None
 
         hours_working = {
             0: [(9, 13), (14, 18)],
@@ -37,23 +39,65 @@ class Agent (object):
                 ])
 
         self.actions = [
-            action.Sleep(energy_rate=10 * hours_step),
-            action.Eat(thresh_full=50, fill_rate=40 * hours_step),
+            action.Sleep(energy_rate=conf_actions['sleep']['energy_rate'] * hours_step),
+            action.Eat(thresh_full=conf_actions['eat']['thresh_full'],
+                       fill_rate=conf_actions['eat']['fill_rate'] * hours_step),
             action.Work(job="business man",
                         company="corpo ltd",
-                        pay_hour=30000/12/4/40,
+                        pay_hour=conf_actions['work']['pay'],
                         sched_work=set(sched_work),
-                        rw_commod={'fun': -4 * hours_step}),
-            action.Relax("watch tv", rw_fun=10 * hours_step, effort_in=0, effort_out=0)
+                        rw_commod={'fun': conf_actions['work']['rw_commod']['fun'] * hours_step}),
+            action.Relax(name=conf_actions['relax']['name'],
+                         rw_fun=conf_actions['relax']['rw']['fun'] * hours_step,
+                         effort_in=0,
+                         effort_out=0)
         ]
 
         self.update_time = {
-            'hunger': -4 * hours_step,
-            'energy': -4 * hours_step,
+            'hunger': conf_update_time['hunger'] * hours_step,
+            'energy': conf_update_time['energy'] * hours_step,
         }
 
-        self._log = []
-        self.current_action = None
+    @classmethod
+    def from_config_file(cls, name: str, sim_step: relativedelta.relativedelta, path: str):
+        with open(path) as f:
+            config = yaml.safe_load(f)
+        # return Agent(name, sim_step, **config['agent'])
+        # TODO Technical debt, find a way to better pass information from config to agent
+        config = config['agent']
+        return Agent(
+            name,
+            sim_step,
+            commod_start={
+                'hunger': config['start-commod-hunger'],
+                'energy': config['start-commod-energy'],
+                'fun': config['start-commod-fun'],
+            },
+            state_start=config['start-state'],
+            actions={
+                'work': {
+                    'pay': config['work-pay'],
+                    'rw_commod': {
+                        'fun': config['work-rw-fun']
+                    },
+                },
+                'sleep': {'energy_rate': config['sleep-energy-rate']},
+                'eat': {
+                    'thresh_full': config['eat-thres-full'],
+                    'fill_rate': config['eat-fill-rate'],
+                },
+                'relax': {
+                    'name': config['relax-name'],
+                    'rw': {
+                        'fun': config['relax-rw-fun']
+                    },
+                },
+            },
+            update_time={
+                    'hunger':config['time-rw-hunger'],
+                    'energy':config['time-rw-energy'],
+            },
+        )
 
     @property
     def current_state(self) -> {}:
