@@ -1,6 +1,8 @@
 import datetime as dt
 from dateutil.relativedelta import relativedelta
 import pandas as pd
+from typing import Dict
+
 
 _PERIODS_DAY = {
     'NIGHT': [(0, 6), (19, 24)],
@@ -60,7 +62,7 @@ class Clock(object):
             for hs, he in periods:
                 if hs <= tst.hour < he:
                     return title
-
+        raise Exception
 
     # TODO DRY
     def get_period_year(self) -> str:
@@ -68,6 +70,7 @@ class Clock(object):
             for ms, me in periods:
                 if ms <= self.time.month < me:
                     return title
+        raise Exception
 
     def get_period_week(self) -> str:
         return _PERIODS_WEEK[self.time.weekday()]
@@ -77,11 +80,12 @@ class Historian(object):
     def __init__(self):
         self._logs = []
 
-    def update_log(self, id_agent: int, agent_state: {}, clock_state: {}):
+    def update_log(self, id_agent: int, agent_state: Dict, clock_state: Dict, utilities: Dict):
         self._logs.append({
             ('meta', 'id_agent'): id_agent,
             **agent_state,
-            **{('clock', k): v for k, v in clock_state.items()}
+            **{('clock', k): v for k, v in clock_state.items()},
+            **{('utils', k): v for k, v in utilities.items()}
         })
 
     @property
@@ -90,4 +94,3 @@ class Historian(object):
             data=self._logs,
             columns=pd.MultiIndex.from_tuples(tuples=self._logs[0].keys(), names=['category','series']),
         )
-

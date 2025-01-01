@@ -1,9 +1,13 @@
 import datetime as dt
-from osiris.model import functions as func
+from main.model import functions as func
+from typing import Dict
 
+
+_BOUND_LOW_MID = 33
+_BOUND_MID_HIGH = 66
 
 class ActionGeneric(object):
-    def __init__(self, name: str, rw_commod: {} = None, rw_mat: {} = None, effort_in: float = 0, effort_out: float = 0):
+    def __init__(self, name: str, rw_commod: Dict = {}, rw_mat: Dict = {}, effort_in: float = 0, effort_out: float = 0):
         if rw_commod is None:
             rw_commod = {}
         if rw_mat is None:
@@ -14,6 +18,19 @@ class ActionGeneric(object):
         self.effort_out = effort_out
         self.effort_in = effort_in
 
+class Bored(ActionGeneric):
+    def __init__(self):
+        super().__init__(
+            name="bored",
+            rw_commod={},
+            effort_in=0,
+            effort_out=0,
+        )
+
+    def utility(self, ts, state_curr, signals: Dict, commodities: Dict):
+        # if no other activity has utility over 40%, then agent stays bored
+        return 0.3
+    
 
 class Relax(ActionGeneric):
     _UTIL_INF_PRONE = func.util('inf', risk_profile='prone')
@@ -26,7 +43,7 @@ class Relax(ActionGeneric):
             effort_out=effort_out
         )
 
-    def utility(self, ts, state_curr, signals: {}, commodities: {}):
+    def utility(self, ts, state_curr, signals: Dict, commodities: Dict):
         if state_curr == self.name:
             bonus_state = self.effort_out
         else:
@@ -38,13 +55,14 @@ class Eat(ActionGeneric):
     def __init__(self, thresh_full, fill_rate:float):
         super().__init__(
             name="eat",
-            rw_commod={'hunger': +fill_rate},
+            rw_commod={'hunger': + fill_rate},
             effort_in=0.1,
-            effort_out=0
+            effort_out=0.1
         )
-        self.util_base = func.util('thresh', risk_profile='prone', threshold=thresh_full)
+        self.util_base = func.util('inf', risk_profile='adverse')
+        # self.util_base = func.util('thresh', risk_profile='prone', threshold=thresh_full)
 
-    def utility(self, ts, state_curr, signals: {}, commodities: {}):
+    def utility(self, ts, state_curr, signals: Dict, commodities: Dict):
         if state_curr == self.name:
             bonus_state = self.effort_out
         else:
@@ -67,7 +85,7 @@ class Work(ActionGeneric):
             effort_out=0
         )
 
-    def utility(self, ts: dt.datetime, state_curr, signals: {}, commodities: {}):
+    def utility(self, ts: dt.datetime, state_curr, signals: Dict, commodities: Dict):
         if (ts.weekday(), ts.time()) in self.sched_work:
             return 1
         else:
@@ -84,25 +102,20 @@ class Sleep(ActionGeneric):
             name="sleep",
             rw_commod={'energy': energy_rate},
             effort_in=0.5,
-            effort_out=0.7
+            effort_out=0.7,
         )
 
-    def utility(self, ts, state_curr, signals: {}, commodities: {}):
+    def utility(self, ts, state_curr, signals: Dict, commodities: Dict):
         if state_curr == self.name:
             bonus_state = self.effort_out
         else:
             bonus_state = - self.effort_in
 
-        if signals['drowsy'] == 1:
-            util = self.__class__._UTIL_INF_PRONE
-        elif signals['drowsy'] == 0:
-            util = self.__class__._UTIL_INF_NEUTRAL
-        else:
-            util = self.__class__._UTIL_INF_ADVERSE
-        return min(1, bonus_state + util(commodities['energy']))
-
-
-if __name__ == "__main__":
-    foo = Sleep()
-    import pdb
-    pdb.set_trace()
+        # if signals['drowsy'] == 1:
+        #     util = self.__class__._UTIL_INF_PRONE
+        # elif signals['drowsy'] == 0:
+        #     util = self.__class__._UTIL_INF_NEUTRAL
+        # else:
+        #     util = self.__class__._UTIL_INF_ADVERSE
+        util = self.__class__._UTIL_INF_NEUTRAL
+        return max(0, min(1, bonus_state + util(commodities['energy'])))

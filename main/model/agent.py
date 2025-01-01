@@ -1,15 +1,19 @@
-from osiris.model import action
+from main.model import action
 import datetime as dt
 from dateutil import relativedelta
+from typing import Dict
+from main.model.action import ActionGeneric
 
 
 class Agent (object):
+    current_action: ActionGeneric
+
     def __init__(self, name: str, sim_step: relativedelta.relativedelta):
         self.name = name
         self.commodities = {
             'hunger': 50,
             'energy': 100,
-            'fun': 100
+            'fun': 100 
         }
         self.signals_int = {
             'drowsy': -1,
@@ -37,8 +41,9 @@ class Agent (object):
                 ])
 
         self.actions = [
+            action.Bored(),
             action.Sleep(energy_rate=10 * hours_step),
-            action.Eat(thresh_full=50, fill_rate=40 * hours_step),
+            action.Eat(thresh_full=50, fill_rate=100 * hours_step),
             action.Work(job="business man",
                         company="corpo ltd",
                         pay_hour=30000/12/4/40,
@@ -52,11 +57,12 @@ class Agent (object):
             'energy': -4 * hours_step,
         }
 
+        self.utils = []
         self._log = []
-        self.current_action = None
+        # self.current_action = None
 
     @property
-    def current_state(self) -> {}:
+    def current_state(self) -> Dict:
         data_mux = {('meta', ' state'): self.state, ('meta', 'action picked'): self.current_action}
         for dic, name in [(self.commodities, 'commod'), (self.signals_int, 'signals int')]:
             for k in dic:
@@ -83,6 +89,7 @@ class Agent (object):
     def pick_action(self, ts):
         utils = [action.utility(ts, self.state, self.signals_int, self.commodities) for action in self.actions]
         action_picked = self.actions[utils.index(max(utils))]
+        
         try:
             self.update_commodities(action_picked.rw_commod)
         except:
@@ -90,16 +97,13 @@ class Agent (object):
         self.update_commodities(self.update_time)
         self.state = action_picked.name
         self.current_action = action_picked
+        
+        self.utilities = {action.name: util for action, util in zip(self.actions, utils)}
 
-    def update_commodities(self,update:{}):
+    def update_commodities(self,update:Dict):
         for stat in update:
             self.commodities[stat] = max(0,min(100, self.commodities[stat] + update[stat]))
 
-
 if __name__ == "__main__":
-    from pprint import pprint
-    koro = Agent("koro")
-    for i in range(100):
-        koro.pick_action()
-    [pprint(v) for v in koro.get_stats().values()]
-
+    agent = Agent("blablou", sim_step=relativedelta.relativedelta(minutes=15))
+    import pdb;pdb.set_trace()
