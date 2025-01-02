@@ -4,6 +4,7 @@ import main.model.context as context
 import datetime as dt
 from dateutil import relativedelta
 import pandas as pd
+from typing import Dict
 
 
 _RUN = "run"
@@ -11,16 +12,45 @@ _NOT_RUN = "not run"
 
 class Model():
     agent: Agent
+    time_step: relativedelta.relativedelta
 
     def __init__(self):
         self.results = pd.DataFrame()
         self.status = _NOT_RUN
 
-    def simulate(self, ts_start: dt.datetime, time_step: relativedelta.relativedelta):
+    def simulate(
+        self,
+        ts_start: dt.datetime,
+        time_step: relativedelta.relativedelta,
+        eat_fill_rate: float,
+        eat_eff_in: float,
+        eat_eff_out: float,
+        sleep_fill_rate: float,
+        sleep_eff_in: float,
+        sleep_eff_out: float,
+        bored_thresh: float,
+        relax_fill_rate: float,
+        relax_eff_in: float,
+        relax_eff_out: float,
+    ):
+        self.time_step = time_step
         clock = Clock(ts_start=ts_start, time_step=time_step)
         historian = context.Historian()
-        self.agent = Agent("agent", sim_step=clock.time_step)
-        for i in range(24 * 100 * 3):
+        self.agent = Agent(
+            "agent",
+            sim_step=clock.time_step,
+            eat_fill_rate=eat_fill_rate,
+            eat_eff_in=eat_eff_in,
+            eat_eff_out=eat_eff_out,
+            sleep_fill_rate=sleep_fill_rate,
+            sleep_eff_in=sleep_eff_in,
+            sleep_eff_out=sleep_eff_out,
+            bored_thresh=bored_thresh,
+            relax_fill_rate=relax_fill_rate,
+            relax_eff_in=relax_eff_in,
+            relax_eff_out=relax_eff_out,
+        )
+        for i in range(24 * 60 * 3):
             self.agent.pick_action(clock.time)
             historian.update_log(id_agent=1, agent_state=self.agent.current_state, clock_state=clock.current_state, utilities=self.agent.utilities)
             clock.tick()
@@ -62,7 +92,6 @@ class Model():
         return output
 
     def summary(self):
-
         # actions daily statistics
         stats = pd.DataFrame(index=self.results.index)
         stats['action_picked'] = self.results['meta']['action picked']
@@ -71,7 +100,7 @@ class Model():
         daily_actions_hours = (
             stats
             .pivot_table(index="day", columns="action_picked", aggfunc="size", fill_value=0)
-            .multiply(time_step.minutes / 60)
+            .multiply(self.time_step.minutes / 60)
         )
 
         daily_actions_hours['date'] = pd.to_datetime(daily_actions_hours.index)
@@ -129,7 +158,6 @@ class Model():
         scores_daily = scores_daily.drop("ts_hour", axis=1).groupby("ts_day").mean()
 
         scores_total: pd.DataFrame = scores_daily.mean() #type: ignore
-        import pdb;pdb.set_trace()
         import os
         root = os.path.dirname(os.path.abspath(__file__))
         path_summary = os.path.join(root, 'outputs', 'results_summary.txt')
@@ -169,13 +197,37 @@ class Model():
 
         path_details = os.path.join(root, 'outputs', 'details.csv')
         self.results.to_csv(path_details)
-        import pdb;pdb.set_trace()
 
 if __name__ == "__main__":
+    # ts_start = dt.datetime(2024, 1, 1)
+    # time_step = relativedelta.relativedelta(minutes=15)
+    # sim = Model()
+    # sim.simulate(
+    #     ts_start,
+    #     time_step,
+    #     # eat_fill_rate=60,
+    # )
+    # sim.summary()
+    # print(sim.agent.actions[2].rw_commod)
+    # import pdb;pdb.set_trace()
+
     ts_start = dt.datetime(2024, 1, 1)
     time_step = relativedelta.relativedelta(minutes=15)
     sim = Model()
-    sim.simulate(ts_start, time_step)
+    sim.simulate(
+        ts_start,
+        time_step,
+        eat_fill_rate=92,
+        eat_eff_in=0.6,
+        eat_eff_out=0,
+        # sleep_fill_rate=64,
+        sleep_fill_rate=64,
+        sleep_eff_in=0.22,
+        # sleep_eff_out=0.38,
+        sleep_eff_out=0.2,
+        bored_thresh=0.055,
+        relax_fill_rate=10.3,
+        relax_eff_in=0.28,
+        relax_eff_out=0.10,
+    )
     sim.summary()
-
-    # import pdb;pdb.set_trace()

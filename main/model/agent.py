@@ -8,10 +8,24 @@ from main.model.action import ActionGeneric
 class Agent (object):
     current_action: ActionGeneric
 
-    def __init__(self, name: str, sim_step: relativedelta.relativedelta):
+    def __init__(
+            self,
+            name: str,
+            sim_step: relativedelta.relativedelta,
+            eat_fill_rate: float,
+            eat_eff_in: float,
+            eat_eff_out: float,
+            sleep_fill_rate: float,
+            sleep_eff_in: float,
+            sleep_eff_out: float,
+            bored_thresh: float,
+            relax_fill_rate: float,
+            relax_eff_in: float,
+            relax_eff_out: float,
+        ):
         self.name = name
         self.commodities = {
-            'hunger': 50,
+            'hunger': 100,
             'energy': 100,
             'fun': 100 
         }
@@ -21,11 +35,11 @@ class Agent (object):
         self.state = 'awake'
 
         hours_working = {
-            0: [(9, 13), (14, 18)],
-            1: [(9, 13), (14, 18)],
-            2: [(9, 13)],
-            3: [(9, 13), (14, 18)],
-            4: [(9, 13), (14, 18)],
+            0: [(9, 13), (14, 19)],
+            1: [(9, 13), (14, 19)],
+            2: [(9, 13), (14, 19)],
+            3: [(9, 13), (14, 19)],
+            4: [(9, 13), (14, 19)],
             5: [],
             6: [],
         }
@@ -40,16 +54,37 @@ class Agent (object):
                     for idx in range(1, int((end - start) / hours_step) + 1)
                 ])
 
+        """
+        sleep_fill: 10
+        sleep_eff_in: 0.35
+        sleep_eff_out: 0.7
+        eat_fill: 100
+        eat_eff_in: 0.1
+        eat_eff_out: 0.1
+        """
         self.actions = [
-            action.Bored(),
-            action.Sleep(energy_rate=10 * hours_step),
-            action.Eat(thresh_full=50, fill_rate=100 * hours_step),
+            action.Bored(threshold=bored_thresh),
+            action.Sleep(
+                energy_rate=sleep_fill_rate * hours_step,
+                effort_in= sleep_eff_in,
+                effort_out = sleep_eff_out,
+            ),
+            action.Eat(
+                fill_rate=eat_fill_rate * hours_step,
+                effort_in=eat_eff_in,
+                effort_out=eat_eff_out,
+            ),
             action.Work(job="business man",
                         company="corpo ltd",
                         pay_hour=30000/12/4/40,
                         sched_work=set(sched_work),
                         rw_commod={'fun': -4 * hours_step}),
-            action.Relax("watch tv", rw_fun=10 * hours_step, effort_in=0, effort_out=0)
+            action.Relax(
+                "relax",
+                rw_fun=relax_fill_rate * hours_step,
+                effort_in=relax_eff_in,
+                effort_out=relax_eff_out,
+            )
         ]
 
         self.update_time = {
@@ -103,7 +138,3 @@ class Agent (object):
     def update_commodities(self,update:Dict):
         for stat in update:
             self.commodities[stat] = max(0,min(100, self.commodities[stat] + update[stat]))
-
-if __name__ == "__main__":
-    agent = Agent("blablou", sim_step=relativedelta.relativedelta(minutes=15))
-    import pdb;pdb.set_trace()

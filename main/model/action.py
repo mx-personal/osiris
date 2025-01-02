@@ -19,21 +19,23 @@ class ActionGeneric(object):
         self.effort_in = effort_in
 
 class Bored(ActionGeneric):
-    def __init__(self):
+    def __init__(self, threshold: float):
         super().__init__(
             name="bored",
             rw_commod={},
             effort_in=0,
             effort_out=0,
         )
+        self.threshold = threshold
 
     def utility(self, ts, state_curr, signals: Dict, commodities: Dict):
-        # if no other activity has utility over 40%, then agent stays bored
-        return 0.3
+        # if no other activity has utility over 20%, then agent stays bored
+        return self.threshold
     
 
 class Relax(ActionGeneric):
     _UTIL_INF_PRONE = func.util('inf', risk_profile='prone')
+    _UTIL_INF_NEUTRAL = func.util('inf', risk_profile='neutral')
 
     def __init__(self, name, rw_fun, effort_in, effort_out):
         super().__init__(
@@ -48,16 +50,16 @@ class Relax(ActionGeneric):
             bonus_state = self.effort_out
         else:
             bonus_state = - self.effort_in
-        return min(1, bonus_state + self.__class__._UTIL_INF_PRONE(commodities['fun']))
+        return min(1, bonus_state + self.__class__._UTIL_INF_NEUTRAL(commodities['fun']))
 
 
 class Eat(ActionGeneric):
-    def __init__(self, thresh_full, fill_rate:float):
+    def __init__(self, fill_rate:float, effort_in: float, effort_out: float):
         super().__init__(
             name="eat",
             rw_commod={'hunger': + fill_rate},
-            effort_in=0.1,
-            effort_out=0.1
+            effort_in=effort_in,
+            effort_out=effort_out,
         )
         self.util_base = func.util('inf', risk_profile='adverse')
         # self.util_base = func.util('thresh', risk_profile='prone', threshold=thresh_full)
@@ -97,12 +99,12 @@ class Sleep(ActionGeneric):
     _UTIL_INF_NEUTRAL = func.util('inf', risk_profile='neutral')
     _UTIL_INF_ADVERSE = func.util('inf', risk_profile='adverse')
 
-    def __init__(self, energy_rate:float):
+    def __init__(self, energy_rate:float, effort_in: float, effort_out: float):
         super().__init__(
             name="sleep",
             rw_commod={'energy': energy_rate},
-            effort_in=0.5,
-            effort_out=0.7,
+            effort_in=effort_in,
+            effort_out=effort_out,
         )
 
     def utility(self, ts, state_curr, signals: Dict, commodities: Dict):
