@@ -1,8 +1,8 @@
-from main.model import action
+from src import action
 import datetime as dt
 from dateutil import relativedelta
 from typing import Dict
-from main.model.action import ActionGeneric
+from src.action import ActionGeneric
 
 
 class Agent (object):
@@ -33,7 +33,7 @@ class Agent (object):
             'drowsy': -1,
         }
         self.state = 'awake'
-
+        self.happiness = happiness_score(self.commodities)
         hours_working = {
             0: [(9, 13), (14, 19)],
             1: [(9, 13), (14, 19)],
@@ -44,6 +44,8 @@ class Agent (object):
             6: [],
         }
 
+        self.types_days = {k: "work" if len(v) > 0 else "off" for k, v in hours_working.items()}
+
         hours_step = sim_step.minutes / 60 + sim_step.hours
         ds = dt.datetime(2020, 1, 1, 0, 0, 0)
         sched_work = []
@@ -53,15 +55,6 @@ class Agent (object):
                     (k, (ds + dt.timedelta(hours=start) + idx * sim_step).time())
                     for idx in range(1, int((end - start) / hours_step) + 1)
                 ])
-
-        """
-        sleep_fill: 10
-        sleep_eff_in: 0.35
-        sleep_eff_out: 0.7
-        eat_fill: 100
-        eat_eff_in: 0.1
-        eat_eff_out: 0.1
-        """
         self.actions = [
             action.Bored(threshold=bored_thresh),
             action.Sleep(
@@ -94,7 +87,6 @@ class Agent (object):
 
         self.utils = []
         self._log = []
-        # self.current_action = None
 
     @property
     def current_state(self) -> Dict:
@@ -105,6 +97,8 @@ class Agent (object):
         data_mux[('meta', 'action picked')] = self.current_action.name
         for action in self.actions:
             data_mux[('actions', action.name)] = int(action.name == self.current_action.name)
+        for k, v in self.happiness.items():
+            data_mux[('scores', k)] = v
         return data_mux
 
     def update_signals_int(self, ts):
@@ -130,6 +124,7 @@ class Agent (object):
         except:
             import pdb;pdb.set_trace()
         self.update_commodities(self.update_time)
+        self.happiness = happiness_score(self.commodities)
         self.state = action_picked.name
         self.current_action = action_picked
         
@@ -138,3 +133,20 @@ class Agent (object):
     def update_commodities(self,update:Dict):
         for stat in update:
             self.commodities[stat] = max(0,min(100, self.commodities[stat] + update[stat]))
+
+def happiness_score(commodities):
+    def scoring(val):
+        if val < 25:
+            return 0.0
+        elif val < 50:
+            return 1.0
+        else:
+            return 2.0
+    importance = {
+        "hunger": 3,
+        "energy": 2,
+        "fun": 1,
+    }
+    output = {k: scoring(commodities[k]) for k in commodities}
+    output['total'] = sum([weight * score for weight, score in zip(importance.values(), output.values())]) / sum(importance.values())
+    return output

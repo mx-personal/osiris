@@ -1,5 +1,5 @@
 import datetime as dt
-from main.model import functions as func
+from src import functions as func
 from typing import Dict
 
 

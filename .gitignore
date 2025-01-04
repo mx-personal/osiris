@@ -131,3 +131,5 @@ dmypy.json
 # IDE configuration
 .idea
 .vscode
+src/outputs/*
+!src/outputs

@@ -1,5 +1,5 @@
 from scipy.optimize import differential_evolution
-from main.model.model import Model
+from src.model.simulation import Simulation
 import datetime as dt
 from dateutil import relativedelta
 import os
@@ -61,7 +61,6 @@ bounds = [
     (0, 1),     # relax eff out
 ]
 
-# bounds = [(0, 100)]
 
 """
 TODO remake to have criteria:
@@ -71,27 +70,17 @@ TODO remake to have criteria:
 """
 
 def compute_loss(simulated_actions, target_actions):
-    output = 0
+    schedule_match = 0
+    total = 0
     for sim_action, target_action in zip(simulated_actions, target_actions):
-        if sim_action != target_action:
-            output +=1
-    return output / len(simulated_actions)
+        if target_action != "any":
+            total += 1
+            if (sim_action != target_action):
+                schedule_match +=1
+    return schedule_match / total
 
 
 target_actions = get_target_actions()
-
-# def objective_function(params):
-#     sim = Model()
-#     sim.simulate(
-#         ts_start=dt.datetime(2024, 1, 1),
-#         time_step=relativedelta.relativedelta(minutes=15),
-#     )
-#     return 0
-
-# result = differential_evolution(
-#     objective_function,
-#     bounds
-# )
 
 
 def objective_function(params):
@@ -117,7 +106,7 @@ result = differential_evolution(
     objective_function,
     bounds,
     maxiter=50,
-    tol=0.2,
+    tol=0.1,
 )
 
 optimised_param = result.x

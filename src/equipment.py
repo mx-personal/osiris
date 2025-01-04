@@ -5,10 +5,8 @@ class Equipment(object):
     def __init__(self):
         pass
 
-
 def generate_equipments():
     pass
-
 
 def _weibull(y0, xi, scale):
     def f(t):
@@ -16,13 +14,11 @@ def _weibull(y0, xi, scale):
     g = lambda t: y0 * f(t) / f(1)
     return g
 
-
 def _exp(k, x0, scale_exp, scale_scalar):
     def f(t):
         return math.pow(t - x0, scale_exp)
     g = lambda t: max(0, scale_scalar * (t - x0)/x0)
     return g
-
 
 def _failrate_bathtub(infant_xi: float,
                       infant_y0: float,

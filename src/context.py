@@ -2,7 +2,7 @@ import datetime as dt
 from dateutil.relativedelta import relativedelta
 import pandas as pd
 from typing import Dict
-
+from src.agent import Agent
 
 _PERIODS_DAY = {
     'NIGHT': [(0, 6), (19, 24)],
@@ -32,10 +32,10 @@ _PERIODS_YEAR = {
 
 
 class Clock(object):
-    def __init__(self, ts_start: dt.datetime, time_step: relativedelta):
+    def __init__(self, ts_start: dt.datetime, time_step_min: int):
         self.t0 = ts_start
         self.time = self.t0
-        self.time_step = time_step
+        self.time_step = relativedelta(minutes=time_step_min)
         self.period_day = self.get_period_day()
         self.period_week = self.get_period_week()
         self.period_year = self.get_period_year()
@@ -48,8 +48,15 @@ class Clock(object):
 
     @property
     def current_state(self):
+        def round_to_hour(dt: dt.datetime) -> dt.datetime:
+            if dt.minute > 0:
+                return (dt.replace(minute=0) + relativedelta(hours=1))
+            return dt
+
         return {
             'ts': self.time,
+            'ts - hour': round_to_hour(self.time),
+            'date': self.time.date(),
             'period - day': self.period_day,
             'period - week': self.period_week,
             'period - year': self.period_year,
@@ -80,12 +87,12 @@ class Historian(object):
     def __init__(self):
         self._logs = []
 
-    def update_log(self, id_agent: int, agent_state: Dict, clock_state: Dict, utilities: Dict):
+    def update_log(self, agent: Agent, clock: Clock):
         self._logs.append({
-            ('meta', 'id_agent'): id_agent,
-            **agent_state,
-            **{('clock', k): v for k, v in clock_state.items()},
-            **{('utils', k): v for k, v in utilities.items()}
+            **agent.current_state,
+            **{('clock', k): v for k, v in clock.current_state.items()},
+            ('clock', 'type_day'): agent.types_days[clock.current_state['ts'].weekday()],
+            **{('utils', k): v for k, v in agent.utilities.items()},
         })
 
     @property

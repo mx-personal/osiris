@@ -1,0 +1,14 @@
+clock:
+    ts_start: 2024-01-01 00:00:00
+    time_step_min: 15
+agent:
+    eat_fill_rate: 36
+    eat_eff_in: 0.22
+    eat_eff_out: 0.04
+    sleep_fill_rate: 62
+    sleep_eff_in: 0.15
+    sleep_eff_out: 0.04
+    relax_fill_rate: 21.9
+    relax_eff_in: 0.17
+    relax_eff_out: 0.09
+    bored_thresh: 0.01
