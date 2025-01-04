@@ -1,0 +1,24 @@
+timestamp simulation: 2025-01-04 15:13:54.714722 
+total score: 1.7126543209876544 
+
+SCORES DETAILS 
+hunger (average / score): 52.86 / 1.44
+energy (average / score): 87.66 / 1.99
+fun (average / score): 92.63 / 2.0
+
+TYPICAL OFF DAY 
+date: 2024-01-06 
+00:00-13:45 (13h45m): sleep 
+14:00-15:45 (1h45m): eat 
+16:00-20:30 (4h30m): bored 
+20:45-23:45 (3h0m): sleep 
+
+TYPICAL WORKING DAY 
+date: 2024-01-02 
+00:00-09:00 (9h0m): sleep 
+09:15-13:00 (3h45m): work 
+13:15-14:00 (0h45m): eat 
+14:15-19:00 (4h45m): work 
+19:15-20:00 (0h45m): eat 
+20:15-21:45 (1h30m): relax 
+22:00-23:45 (1h45m): sleep 

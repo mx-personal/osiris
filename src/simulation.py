@@ -30,7 +30,7 @@ class Simulation():
         self.status = _NOT_RUN
 
     def run(self):
-        for i in range(24 * 60 * 3):
+        for i in range(24 * 30 * 3):
             self.agent.pick_action(self.clock.time)
             self.historian.update_log(
                 agent=self.agent,

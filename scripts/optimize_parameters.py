@@ -1,17 +1,15 @@
 from scipy.optimize import differential_evolution
-from src.model.simulation import Simulation
+from src import Simulation
 import datetime as dt
 from dateutil import relativedelta
 import os
 import datetime as dt
 import openpyxl
 from typing import List, Dict
-
+from globals import CONFIG_DIR
 
 def get_target_actions():
-    root = os.path.dirname(os.path.abspath(__file__))
-    path_schedules = os.path.join(root, 'parameters', 'optimal-schedule.xlsx')
-    wb = openpyxl.load_workbook(path_schedules)
+    wb = openpyxl.load_workbook(CONFIG_DIR / 'optimal-schedule.xlsx')
     sh = wb['Sheet1']
 
     schedule_working = {}
@@ -19,9 +17,12 @@ def get_target_actions():
     for idx, row in enumerate(sh.iter_rows(values_only=True)):
         if isinstance(row[0], dt.time):
             schedule_working[row[0]] = row[1]
-            schedule_off[row[3]] = row[4]
         elif isinstance(row[0], dt.datetime):
             schedule_working[row[0].time()] = row[1]
+
+        if isinstance(row[3], dt.time):
+            schedule_off[row[3]] = row[4]
+        elif isinstance(row[3], dt.datetime):
             schedule_off[row[3].time()] = row[4]
 
 
@@ -84,29 +85,35 @@ target_actions = get_target_actions()
 
 
 def objective_function(params):
-    sim = Model()
-    sim.simulate(
-        ts_start=dt.datetime(2024, 1, 1),
-        time_step=relativedelta.relativedelta(minutes=15),
-        eat_fill_rate=params[0],
-        eat_eff_in=params[1],
-        eat_eff_out=params[2],
-        sleep_fill_rate=params[3],
-        sleep_eff_in=params[4],
-        sleep_eff_out=params[5],
-        bored_thresh=params[6],
-        relax_fill_rate=params[7],
-        relax_eff_in=params[8],
-        relax_eff_out=params[9],
+    sim = Simulation(
+        clock_config = {
+            "ts_start": dt.datetime(2024, 1, 1),
+            "time_step_min": 15,
+        },
+        agent_config = {
+            'eat_fill_rate': params[0],
+            'eat_eff_in': params[1],
+            'eat_eff_out': params[2],
+            'sleep_fill_rate': params[3],
+            'sleep_eff_in': params[4],
+            'sleep_eff_out': params[5],
+            'bored_thresh': params[6],
+            'relax_fill_rate': params[7],
+            'relax_eff_in': params[8],
+            'relax_eff_out': params[9],
+        },
     )
+
+    sim.run()
     loss = compute_loss(simulated_actions=sim.results['meta']['action picked'].values, target_actions=target_actions)
+    # loss = 0
     return loss
 
 result = differential_evolution(
     objective_function,
     bounds,
-    maxiter=50,
-    tol=0.1,
+    maxiter=10,
+    tol=0.2,
 )
 
 optimised_param = result.x
