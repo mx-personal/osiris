@@ -55,6 +55,7 @@ class Clock(object):
 
         return {
             'ts': self.time,
+            'ts - time': self.time.time(),
             'ts - hour': round_to_hour(self.time),
             'date': self.time.date(),
             'period - day': self.period_day,
