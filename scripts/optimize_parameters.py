@@ -6,7 +6,7 @@ import os
 import datetime as dt
 import openpyxl
 from typing import List, Dict, Literal
-from globals import CONFIG_DIR
+from globals import CONFIG_DIR, OUTPUT_DIR
 import pandas as pd
 from src import typical_day
 
@@ -66,6 +66,10 @@ def compute_loss(
     _SCHEDULE_OFF = "schedule_off"
     _SCHEDULE_WORK = "schedule_work"
     _HAPPINESS = "happiness"
+
+    for mode in include:
+        assert mode in [_HAPPINESS, _SCHEDULE_OFF, _SCHEDULE_WORK]
+
     if _SCHEDULE_OFF in include:
         losses[_SCHEDULE_OFF] = loss_schedule(results, "off", _TARGET_SCHEDULE['off'])
     if _SCHEDULE_WORK in include:
@@ -97,8 +101,10 @@ def objective_function(params):
     sim.run()
     losses = compute_loss(
         sim.results,
-        include = ['schedule_off', "schedule_work"]
+        include = ['schedule_off']
+        # include = ['schedule_off', "schedule_work"]
     )
+    print({k: round(v, 3) for k, v in losses.items()})
     return sum(losses.values()) / len(losses)
 
 
@@ -119,8 +125,8 @@ if __name__ == "__main__":
     result = differential_evolution(
         objective_function,
         bounds,
-        maxiter=100,
-        tol=0.2,
+        maxiter=5,
+        # tol=0.2,
     )
 
     optimised_param = result.x
@@ -139,5 +145,32 @@ if __name__ == "__main__":
 
     final_loss = objective_function(optimised_param)
     print(f"final loss: {round(100* final_loss, 2)}%")
+
+    import yaml
+    output = {
+        "clock_config": {
+            "ts_start": dt.datetime(2024, 1, 1),
+            "time_step_min": 15,
+        },
+        "agent_config":{
+            "eat_fill_rate": optimised_param[0],
+            "eat_eff_in": optimised_param[1],
+            "eat_eff_out": optimised_param[2],
+            "sleep_fill_rate": optimised_param[3],
+            "sleep_eff_in": optimised_param[4],
+            "sleep_eff_out": optimised_param[5],
+            "relax_fill_rate": optimised_param[6],
+            "relax_eff_in": optimised_param[7],
+            "relax_eff_out": optimised_param[8],
+            "bored_thresh": optimised_param[9],
+        }
+    }
+    # with open(OUTPUT_DIR / "sim_config_optimal.yaml") as f:
+    #     yaml.dump_all()
+    from src import Simulation
+    sim = Simulation(**output)
+    sim.run()
+        
+
     import pdb;pdb.set_trace()
     

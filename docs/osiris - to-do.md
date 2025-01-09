@@ -8,7 +8,7 @@ modified: '2021-09-05T16:46:52.948Z'
 # osiris - to-do
 ### Short-term
 + [x] Remake all commodities impacts in change per hour & make simulation in minutes
-+ [ ] Prevent from working over weekends
++ [x] Prevent from working over weekends
 + [ ] Try having state affecting utility profile rather than simple boost on utility value
 + [ ] Add happiness measure & have it impact perf. at work then salary
 + [ ] Create a 'leptine/ghrelin' signal for hunger management

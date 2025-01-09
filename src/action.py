@@ -113,11 +113,11 @@ class Sleep(ActionGeneric):
         else:
             bonus_state = - self.effort_in
 
-        # if signals['drowsy'] == 1:
-        #     util = self.__class__._UTIL_INF_PRONE
-        # elif signals['drowsy'] == 0:
-        #     util = self.__class__._UTIL_INF_NEUTRAL
-        # else:
-        #     util = self.__class__._UTIL_INF_ADVERSE
+        if signals['drowsy'] == 1:
+            util = self.__class__._UTIL_INF_PRONE
+        elif signals['drowsy'] == 0:
+            util = self.__class__._UTIL_INF_NEUTRAL
+        else:
+            util = self.__class__._UTIL_INF_ADVERSE
         util = self.__class__._UTIL_INF_NEUTRAL
         return max(0, min(1, bonus_state + util(commodities['energy'])))
