@@ -68,4 +68,3 @@ def average_scores(results: pd.DataFrame) -> Dict:
         })
     output['total'] = mean_scores['total']
     return output
-
