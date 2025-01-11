@@ -2,13 +2,17 @@ clock:
     ts_start: 2024-01-01 00:00:00
     time_step_min: 15
 agent:
-    eat_fill_rate: 79
-    eat_eff_in: 0.9
-    eat_eff_out: 0.74
-    sleep_fill_rate: 6.3
-    sleep_eff_in: 0.25
-    sleep_eff_out: 0.2
-    relax_fill_rate: 44.4
-    relax_eff_in: 0.49
-    relax_eff_out: 0.9
-    bored_thresh: 0.15
+    eat_fill_rate: 50
+    eat_factor: 1
+    eat_eff_in: 0
+    eat_eff_out: 0
+    sleep_fill_rate: 10
+    sleep_factor_day: 1
+    sleep_factor_night: 1
+    sleep_eff_in: 0.2
+    sleep_eff_out: 0.4
+    relax_fill_rate: 20
+    relax_factor: 1
+    relax_eff_in: 0
+    relax_eff_out: 0
+    bored_thresh: 0.2

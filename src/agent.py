@@ -13,21 +13,30 @@ class Agent (object):
             name: str,
             sim_step: relativedelta.relativedelta,
             eat_fill_rate: float,
+            eat_factor: float,
             eat_eff_in: float,
             eat_eff_out: float,
             sleep_fill_rate: float,
+            sleep_factor_day: float,
+            sleep_factor_night: float,
             sleep_eff_in: float,
             sleep_eff_out: float,
             bored_thresh: float,
             relax_fill_rate: float,
+            relax_factor: float,
             relax_eff_in: float,
             relax_eff_out: float,
+            cleanup_fill_rate: float,
+            cleanup_factor: float,
+            cleanup_eff_in: float,
+            cleanup_eff_out: float,
         ):
         self.name = name
         self.commodities = {
             'hunger': 100,
             'energy': 100,
-            'fun': 100 
+            'fun': 100,
+            'environment': 100,
         }
         self.signals_int = {
             'drowsy': -1,
@@ -59,11 +68,14 @@ class Agent (object):
             action.Bored(threshold=bored_thresh),
             action.Sleep(
                 energy_rate=sleep_fill_rate * hours_step,
-                effort_in= sleep_eff_in,
-                effort_out = sleep_eff_out,
+                factor_day=sleep_factor_day,
+                factor_night=sleep_factor_night,
+                effort_in=sleep_eff_in,
+                effort_out=sleep_eff_out,
             ),
             action.Eat(
                 fill_rate=eat_fill_rate * hours_step,
+                factor=eat_factor,
                 effort_in=eat_eff_in,
                 effort_out=eat_eff_out,
             ),
@@ -74,15 +86,24 @@ class Agent (object):
                         rw_commod={'fun': -4 * hours_step}),
             action.Relax(
                 "relax",
+                factor=relax_factor,
                 rw_fun=relax_fill_rate * hours_step,
                 effort_in=relax_eff_in,
                 effort_out=relax_eff_out,
+            ),
+            action.CleanUp(
+                cleanup_fill_rate=cleanup_fill_rate,
+                factor=cleanup_factor,
+                effort_in=cleanup_eff_in,
+                effort_out=cleanup_eff_out,
             )
         ]
 
         self.update_time = {
             'hunger': -4 * hours_step,
             'energy': -4 * hours_step,
+            'fun': -1 * hours_step,
+            'environment': -1 * hours_step, # TODO make decrease only when home
         }
 
         self.utils = []
@@ -118,7 +139,6 @@ class Agent (object):
     def pick_action(self, ts):
         utils = [action.utility(ts, self.state, self.signals_int, self.commodities) for action in self.actions]
         action_picked = self.actions[utils.index(max(utils))]
-        
         try:
             self.update_commodities(action_picked.rw_commod)
         except:
@@ -127,7 +147,7 @@ class Agent (object):
         self.happiness = happiness_score(self.commodities)
         self.state = action_picked.name
         self.current_action = action_picked
-        
+        self.update_signals_int(ts)
         self.utilities = {action.name: util for action, util in zip(self.actions, utils)}
 
     def update_commodities(self,update:Dict):
@@ -146,6 +166,7 @@ def happiness_score(commodities):
         "hunger": 3,
         "energy": 2,
         "fun": 1,
+        "environment": 1,
     }
     output = {k: scoring(commodities[k]) for k in commodities}
     output['total'] = sum([weight * score for weight, score in zip(importance.values(), output.values())]) / sum(importance.values())

@@ -1,0 +1,19 @@
+agent:
+  bored_thresh: 0.11289306061940191
+  eat_eff_in: 0.02787883399798341
+  eat_eff_out: 0.24318125920072764
+  eat_factor: 1.0590219156232208
+  eat_fill_rate: 90.72333022807163
+  relax_eff_in: 0.2932822881441776
+  relax_eff_out: 0.30519509125954575
+  relax_factor: 1.6114739439518502
+  relax_fill_rate: 46.78679524637696
+  sleep_eff_in: 0.3461010191034864
+  sleep_eff_out: 0.43728919930105525
+  sleep_factor_day: 1.330807261321131
+  sleep_factor_night: 0.5893915437988919
+  sleep_fill_rate: 15
+  # sleep_fill_rate: 20
+clock:
+  time_step_min: 15
+  ts_start: 2024-01-01 00:00:00

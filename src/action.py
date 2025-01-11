@@ -1,13 +1,18 @@
 import datetime as dt
 from src import functions as func
-from typing import Dict
+from typing import Dict, Callable
 
-
-_BOUND_LOW_MID = 33
-_BOUND_MID_HIGH = 66
 
 class ActionGeneric(object):
-    def __init__(self, name: str, rw_commod: Dict = {}, rw_mat: Dict = {}, effort_in: float = 0, effort_out: float = 0):
+    def __init__(
+            self,
+            name: str,
+            utility: Callable,
+            rw_commod: Dict = {},
+            rw_mat: Dict = {},
+            effort_in: float = 0,
+            effort_out: float = 0,
+        ):
         if rw_commod is None:
             rw_commod = {}
         if rw_mat is None:
@@ -17,63 +22,73 @@ class ActionGeneric(object):
         self.rw_commod = rw_commod
         self.effort_out = effort_out
         self.effort_in = effort_in
+        self.utility = utility
+
 
 class Bored(ActionGeneric):
     def __init__(self, threshold: float):
+        def utility(ts, state_curr, signals: Dict, commodities: Dict):
+            return self.threshold
+
         super().__init__(
             name="bored",
+            utility=utility,
             rw_commod={},
             effort_in=0,
             effort_out=0,
         )
         self.threshold = threshold
-
-    def utility(self, ts, state_curr, signals: Dict, commodities: Dict):
-        # if no other activity has utility over 20%, then agent stays bored
-        return self.threshold
     
 
 class Relax(ActionGeneric):
-    _UTIL_INF_PRONE = func.util('inf', risk_profile='prone')
-    _UTIL_INF_NEUTRAL = func.util('inf', risk_profile='neutral')
-
-    def __init__(self, name, rw_fun, effort_in, effort_out):
+    def __init__(self, name, rw_fun, effort_in, effort_out, factor: float):
+        self.factor = factor
+        base_utility = func._util_inf_free(factor)
+        
+        def utility(ts, state_curr, signals: Dict, commodities: Dict):
+            if state_curr == self.name:
+                bonus_state = self.effort_out
+            else:
+                bonus_state = - self.effort_in
+            return min(1, bonus_state + base_utility(commodities['fun']))
+        
         super().__init__(
             name=name,
+            utility=utility,
             rw_commod={'fun': rw_fun},
             effort_in=effort_in,
             effort_out=effort_out
         )
 
-    def utility(self, ts, state_curr, signals: Dict, commodities: Dict):
-        if state_curr == self.name:
-            bonus_state = self.effort_out
-        else:
-            bonus_state = - self.effort_in
-        return min(1, bonus_state + self.__class__._UTIL_INF_NEUTRAL(commodities['fun']))
-
 
 class Eat(ActionGeneric):
-    def __init__(self, fill_rate:float, effort_in: float, effort_out: float):
+    def __init__(self, fill_rate:float, effort_in: float, effort_out: float, factor: float):
+        self.factor = factor
+        base_utility = func._util_inf_free(factor)
+        def utility(ts, state_curr, signals: Dict, commodities: Dict):
+            if state_curr == self.name:
+                bonus_state = self.effort_out
+            else:
+                bonus_state = - self.effort_in
+            return min(1, bonus_state + base_utility(commodities['hunger']))
+        
         super().__init__(
             name="eat",
+            utility=utility,
             rw_commod={'hunger': + fill_rate},
             effort_in=effort_in,
             effort_out=effort_out,
         )
-        self.util_base = func.util('inf', risk_profile='adverse')
-        # self.util_base = func.util('thresh', risk_profile='prone', threshold=thresh_full)
-
-    def utility(self, ts, state_curr, signals: Dict, commodities: Dict):
-        if state_curr == self.name:
-            bonus_state = self.effort_out
-        else:
-            bonus_state = - self.effort_in
-        return min(1, bonus_state + self.util_base(commodities['hunger']))
 
 
 class Work(ActionGeneric):
     def __init__(self, job: str, company: str, pay_hour: float, sched_work: set, rw_commod):
+        def utility(ts: dt.datetime, state_curr, signals: Dict, commodities: Dict):
+            if (ts.weekday(), ts.time()) in self.sched_work:
+                return 1
+            else:
+                return -1
+
         self.job = job
         self.company = company
         self.pay_month = pay_hour
@@ -81,43 +96,59 @@ class Work(ActionGeneric):
 
         super().__init__(
             name="work",
+            utility=utility,
             rw_mat={'money': pay_hour},
             rw_commod=rw_commod,
             effort_in=0,
             effort_out=0
         )
 
-    def utility(self, ts: dt.datetime, state_curr, signals: Dict, commodities: Dict):
-        if (ts.weekday(), ts.time()) in self.sched_work:
-            return 1
-        else:
-            return -1
-
 
 class Sleep(ActionGeneric):
-    _UTIL_INF_PRONE = func.util('inf', risk_profile='prone')
-    _UTIL_INF_NEUTRAL = func.util('inf', risk_profile='neutral')
-    _UTIL_INF_ADVERSE = func.util('inf', risk_profile='adverse')
+    def __init__(self, energy_rate:float, effort_in: float, effort_out: float, factor_day: float, factor_night: float):
+        self.factor_day = factor_day
+        self.factor_night = factor_night
+        utility_day = func._util_inf_free(factor_day)
+        utility_night = func._util_inf_free(factor_night)
 
-    def __init__(self, energy_rate:float, effort_in: float, effort_out: float):
+        def utility(ts, state_curr, signals: Dict, commodities: Dict):
+            if state_curr == self.name:
+                bonus_state = self.effort_out
+            else:
+                bonus_state = - self.effort_in
+
+            if signals['drowsy'] == 1:
+                util = utility_night
+            elif signals['drowsy'] == 0:
+                util = utility_day
+            else:
+                util = utility_day
+            return max(0, min(1, bonus_state + util(commodities['energy'])))
+
         super().__init__(
             name="sleep",
+            utility=utility,
             rw_commod={'energy': energy_rate},
             effort_in=effort_in,
             effort_out=effort_out,
         )
 
-    def utility(self, ts, state_curr, signals: Dict, commodities: Dict):
-        if state_curr == self.name:
-            bonus_state = self.effort_out
-        else:
-            bonus_state = - self.effort_in
+class CleanUp(ActionGeneric):
+    def __init__(self, cleanup_fill_rate:float, effort_in: float, effort_out: float, factor: float):
+        self.factor = factor
+        base_utility = func._util_inf_free(factor)
 
-        if signals['drowsy'] == 1:
-            util = self.__class__._UTIL_INF_PRONE
-        elif signals['drowsy'] == 0:
-            util = self.__class__._UTIL_INF_NEUTRAL
-        else:
-            util = self.__class__._UTIL_INF_ADVERSE
-        util = self.__class__._UTIL_INF_NEUTRAL
-        return max(0, min(1, bonus_state + util(commodities['energy'])))
+        def utility(ts, state_curr, signals: Dict, commodities: Dict):
+            if state_curr == self.name:
+                bonus_state = self.effort_out
+            else:
+                bonus_state = - self.effort_in
+            return min(1, bonus_state + base_utility(commodities['environment']))
+
+        super().__init__(
+            name="cleanup",
+            utility=utility,
+            rw_commod={'environment': cleanup_fill_rate},
+            effort_in=effort_in,
+            effort_out=effort_out,
+        )

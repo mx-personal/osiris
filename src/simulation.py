@@ -18,9 +18,9 @@ class Simulation():
         else:
             config_args = {}
 
-        args_clock = {**config_args.get('clock', {}), **kwargs.get('clock_config', {})}
+        args_clock = {**config_args.get('clock', {}), **kwargs.get('clock', {})}
         
-        args_agent = {**config_args.get('agent', {}), **kwargs.get('agent_config', {})}
+        args_agent = {**config_args.get('agent', {}), **kwargs.get('agent', {})}
         args_agent["sim_step"] = relativedelta.relativedelta(minutes=args_clock['time_step_min'])
         self.agent = Agent("agent", **args_agent)
         self.clock = Clock(**args_clock)
@@ -30,7 +30,7 @@ class Simulation():
         self.status = _NOT_RUN
 
     def run(self):
-        for i in range(24 * 30 * 3):
+        for i in range(24 * 60 * 3):
             self.agent.pick_action(self.clock.time)
             self.historian.update_log(
                 agent=self.agent,

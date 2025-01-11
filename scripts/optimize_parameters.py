@@ -1,15 +1,30 @@
-from scipy.optimize import differential_evolution
+from scipy.optimize import differential_evolution, minimize
 from src import Simulation
 import datetime as dt
 from dateutil import relativedelta
+from run_simulation import summary
 import os
 import datetime as dt
 import openpyxl
-from typing import List, Dict, Literal
+from typing import List, Dict, Literal, Callable
 from globals import CONFIG_DIR, OUTPUT_DIR
 import pandas as pd
 from src import typical_day
+import yaml
+from dataclasses import dataclass
 
+class Parameter:
+    name: str
+    default: float
+    lbound: float
+    ubound: float
+    value: float
+
+    def __init__(self, name, default, lbound, ubound):
+        self.name = name
+        self.default = default
+        self.lbound = lbound
+        self.ubound = ubound
 
 
 def get_target_actions():
@@ -58,6 +73,14 @@ def loss_schedule(
     return count_mismatch / count_values
 
 
+def loss_averages(results: pd.DataFrame) -> float:
+    import pdb;pdb.set_trace()
+    return 0.0
+
+def loss_happiness(results: pd.DataFrame) -> float:
+    return 1 - float(results['scores'].mean().mean()) / 3
+
+
 def compute_loss(
         results: pd.DataFrame,
         include: List[str]
@@ -66,111 +89,119 @@ def compute_loss(
     _SCHEDULE_OFF = "schedule_off"
     _SCHEDULE_WORK = "schedule_work"
     _HAPPINESS = "happiness"
+    _AVERAGES = "average"
 
     for mode in include:
-        assert mode in [_HAPPINESS, _SCHEDULE_OFF, _SCHEDULE_WORK]
+        assert mode in [_HAPPINESS, _SCHEDULE_OFF, _SCHEDULE_WORK, _AVERAGES]
 
     if _SCHEDULE_OFF in include:
         losses[_SCHEDULE_OFF] = loss_schedule(results, "off", _TARGET_SCHEDULE['off'])
     if _SCHEDULE_WORK in include:
         losses[_SCHEDULE_WORK] = loss_schedule(results, "work", _TARGET_SCHEDULE['work'])
-
+    if _AVERAGES in include:
+        losses[_AVERAGES] = loss_averages(results)
+    if _HAPPINESS in include:
+        losses[_HAPPINESS] = loss_happiness(results)
     return losses
 
 
-def objective_function(params):
-    sim = Simulation(
-        clock_config = {
+def objective_function(parameters: List[Parameter], include: List[str]) -> Callable[[List[float]], float]:
+
+    def _objective_function(params):
+        sim = Simulation(
+            clock = {
+                "ts_start": dt.datetime(2024, 1, 1),
+                "time_step_min": 15,
+            },
+            agent = {param.name: params[idx] for idx, param in enumerate(parameters)},
+        )
+        sim.run()
+        losses = compute_loss(
+            sim.results,
+            include=include,
+        )
+        print({k: round(v, 3) for k, v in losses.items()})
+        return sum(losses.values()) / len(losses)
+
+    return _objective_function
+
+def params_to_config(params: List[Parameter]) -> Dict:
+    return {
+        "clock": {
             "ts_start": dt.datetime(2024, 1, 1),
             "time_step_min": 15,
         },
-        agent_config = {
-            'eat_fill_rate': params[0],
-            'eat_eff_in': params[1],
-            'eat_eff_out': params[2],
-            'sleep_fill_rate': params[3],
-            'sleep_eff_in': params[4],
-            'sleep_eff_out': params[5],
-            'bored_thresh': params[6],
-            'relax_fill_rate': params[7],
-            'relax_eff_in': params[8],
-            'relax_eff_out': params[9],
-        },
-    )
+        "agent":{param.name: param.value for param in params}
+    }
 
-    sim.run()
-    losses = compute_loss(
-        sim.results,
-        include = ['schedule_off']
-        # include = ['schedule_off', "schedule_work"]
-    )
-    print({k: round(v, 3) for k, v in losses.items()})
-    return sum(losses.values()) / len(losses)
+def save_results(parameters: List[Parameter], file_name: str):
+    configs = params_to_config(parameters)
+    with open(OUTPUT_DIR / f"{file_name}.yaml", "w") as f:
+        yaml.dump(configs, f)
 
+_LBOUND_EFF = 0
+_UBOUND_EFF = 1
+_LBOUND_FACTOR = 0.5
+_UBOUND_FACTOR = 2
+_LBOUND_FILL = 0
+_UBOUND_FILL = 100
+#  nanme | default | lower bound | upper bound
+sim_params = [
+    Parameter(name='eat_fill_rate', default=50, lbound=_LBOUND_FILL, ubound=_UBOUND_FILL),
+    Parameter(name='eat_factor', default=1, lbound=_LBOUND_FACTOR, ubound=_UBOUND_FACTOR),
+    Parameter(name='eat_eff_in', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
+    Parameter(name='eat_eff_out', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
+
+    Parameter(name='sleep_fill_rate', default=50, lbound=_LBOUND_FILL, ubound=_UBOUND_FILL),
+    Parameter(name='sleep_factor_day', default=1, lbound=_LBOUND_FACTOR, ubound=_UBOUND_FACTOR),
+    Parameter(name='sleep_factor_night', default=1, lbound=_LBOUND_FACTOR, ubound=_UBOUND_FACTOR),
+    Parameter(name='sleep_eff_in', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
+    Parameter(name='sleep_eff_out', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
+
+    Parameter(name='relax_fill_rate', default=50, lbound=_LBOUND_FILL, ubound=_UBOUND_FILL),
+    Parameter(name='relax_factor', default=1, lbound=_LBOUND_FACTOR, ubound=_UBOUND_FACTOR),
+    Parameter(name='relax_eff_in', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
+    Parameter(name='relax_eff_out', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
+
+    Parameter(name='cleanup_fill_rate', default=50, lbound=_LBOUND_FILL, ubound=_UBOUND_FILL),
+    Parameter(name='cleanup_factor', default=1, lbound=_LBOUND_FACTOR, ubound=_UBOUND_FACTOR),
+    Parameter(name='cleanup_eff_in', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
+    Parameter(name='cleanup_eff_out', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
+
+    Parameter(name='bored_thresh', default=0.20, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
+
+]
 
 if __name__ == "__main__":
-    bounds = [
-        (0, 100),   # eat fill
-        (0, 1),     # eat eff in
-        (0, 1),     # eat eff out
-        (0, 100),   # sleep fill
-        (0, 1),     # sleep eff in
-        (0, 1),     # sleep eff out
-        (0, 1),     # bored threshold
-        (0, 100),   # relax fill rate
-        (0, 1),     # relax eff in
-        (0, 1),     # relax eff out
-    ]
-
-    result = differential_evolution(
-        objective_function,
-        bounds,
-        maxiter=5,
-        # tol=0.2,
-    )
-
-    optimised_param = result.x
-    print(f"eat fill rate: {optimised_param[0]}")
-    print(f"eat eff in: {optimised_param[1]}")
-    print(f"eat eff out: {optimised_param[2]}")
-    print(f"sleep fill rate: {optimised_param[3]}")
-    print(f"sleep eff in: {optimised_param[4]}")
-    print(f"sleep eff out: {optimised_param[5]}")
-
-    print(f"bored thresh: {optimised_param[6]}")
-
-    print(f"relax fill rate: {optimised_param[7]}")
-    print(f"relax eff in: {optimised_param[8]}")
-    print(f"relax eff out: {optimised_param[9]}")
-
-    final_loss = objective_function(optimised_param)
-    print(f"final loss: {round(100* final_loss, 2)}%")
-
-    import yaml
-    output = {
-        "clock_config": {
-            "ts_start": dt.datetime(2024, 1, 1),
-            "time_step_min": 15,
-        },
-        "agent_config":{
-            "eat_fill_rate": optimised_param[0],
-            "eat_eff_in": optimised_param[1],
-            "eat_eff_out": optimised_param[2],
-            "sleep_fill_rate": optimised_param[3],
-            "sleep_eff_in": optimised_param[4],
-            "sleep_eff_out": optimised_param[5],
-            "relax_fill_rate": optimised_param[6],
-            "relax_eff_in": optimised_param[7],
-            "relax_eff_out": optimised_param[8],
-            "bored_thresh": optimised_param[9],
-        }
-    }
-    # with open(OUTPUT_DIR / "sim_config_optimal.yaml") as f:
-    #     yaml.dump_all()
     from src import Simulation
-    sim = Simulation(**output)
-    sim.run()
-        
 
-    import pdb;pdb.set_trace()
+    bounds = [(param.lbound, param.ubound) for param in sim_params]
+    # includes = [['schedule_off', 'schedule_work']]
+    # includes = [['schedule_work', 'schedule_off', 'happiness']]
+    includes = [['schedule_work', 'happiness']]
+
+    for include in includes:
+        print(f"running simulation for {include}")
+        func = objective_function(sim_params, include=include)
+        result = differential_evolution(
+            func,
+            bounds,
+            # maxiter=1,
+            tol=0.2,
+        )
+        for idx, param in enumerate(sim_params):
+            param.value = float(result.x[idx])
+        configs = params_to_config(sim_params)
+        save_results(sim_params, 'optimised')
+        sim = Simulation(**configs)
+        sim.run()
+        
+        loss = compute_loss(sim.results, include=['schedule_work', 'schedule_off', 'happiness'])
+        print("---- Final results ----")
+        print(f"Score schedule work: {loss['schedule_work']}")
+        print(f"Score schedule off: {loss['schedule_off']}")
+        print(f"Score happiness: {loss['happiness']}")
+
+        summary(sim)
+        import pdb;pdb.set_trace()
     
