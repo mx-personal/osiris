@@ -9,9 +9,10 @@ import openpyxl
 from typing import List, Dict, Literal, Callable
 from globals import CONFIG_DIR, OUTPUT_DIR
 import pandas as pd
-from src import typical_day
+from src import typical_day, evals
 import yaml
 from dataclasses import dataclass
+from src import average_scores
 
 class Parameter:
     name: str
@@ -78,7 +79,7 @@ def loss_averages(results: pd.DataFrame) -> float:
     return 0.0
 
 def loss_happiness(results: pd.DataFrame) -> float:
-    return 1 - float(results['scores'].mean().mean()) / 3
+    return 1 - float(results['scores'].mean().mean()) / 3 # type: ignore
 
 
 def compute_loss(
@@ -90,9 +91,11 @@ def compute_loss(
     _SCHEDULE_WORK = "schedule_work"
     _HAPPINESS = "happiness"
     _AVERAGES = "average"
+    _GOOD_HABITS = 'habits'
+    
 
     for mode in include:
-        assert mode in [_HAPPINESS, _SCHEDULE_OFF, _SCHEDULE_WORK, _AVERAGES]
+        assert mode in [_HAPPINESS, _SCHEDULE_OFF, _SCHEDULE_WORK, _AVERAGES, _GOOD_HABITS]
 
     if _SCHEDULE_OFF in include:
         losses[_SCHEDULE_OFF] = loss_schedule(results, "off", _TARGET_SCHEDULE['off'])
@@ -102,6 +105,12 @@ def compute_loss(
         losses[_AVERAGES] = loss_averages(results)
     if _HAPPINESS in include:
         losses[_HAPPINESS] = loss_happiness(results)
+    if _GOOD_HABITS in include:
+        loss_habits = evals(results)
+        # output_str = ",".join([f'{k}:' + '{:.3f}'.format(v) for k,v in losses.items()])
+        # print(output_str)
+        losses[_GOOD_HABITS] = sum(loss_habits.values()) / len(loss_habits.values())
+
     return losses
 
 
@@ -120,7 +129,7 @@ def objective_function(parameters: List[Parameter], include: List[str]) -> Calla
             sim.results,
             include=include,
         )
-        print({k: round(v, 3) for k, v in losses.items()})
+        # print({k: round(v, 3) for k, v in losses.items()})
         return sum(losses.values()) / len(losses)
 
     return _objective_function
@@ -178,21 +187,40 @@ if __name__ == "__main__":
     bounds = [(param.lbound, param.ubound) for param in sim_params]
     # includes = [['schedule_off', 'schedule_work']]
     # includes = [['schedule_work', 'schedule_off', 'happiness']]
-    includes = [['schedule_work', 'happiness']]
-
+    # includes = [['schedule_work', 'happiness']]
+    includes = [['habits']]
+    results = []
     for include in includes:
         print(f"running simulation for {include}")
         func = objective_function(sim_params, include=include)
-        result = differential_evolution(
-            func,
-            bounds,
-            # maxiter=1,
-            tol=0.2,
-        )
-        for idx, param in enumerate(sim_params):
-            param.value = float(result.x[idx])
-        configs = params_to_config(sim_params)
-        save_results(sim_params, 'optimised')
+        for id_agent in range(5):
+            print(f"running optim for agent {id_agent}")
+            result = differential_evolution(
+                func,
+                bounds,
+                # maxiter=1,
+                tol=0.2,
+            )
+            for idx, param in enumerate(sim_params):
+                param.value = float(result.x[idx])
+            configs = params_to_config(sim_params)
+            save_results(sim_params, f'optimised-{id_agent}')
+
+            sim = Simulation(**configs)
+            sim.run()
+
+            results.append(
+                {
+                    'agent_id': id_agent,
+                    'file': f'optimised-{id_agent}',
+                    'score_total': average_scores(sim.results)['total'],
+                    'commodities': average_scores(sim.results)['commodities'],
+                }
+            )
+        from pprint import pprint
+        pprint(results)
+        import pdb;pdb.set_trace()
+
         sim = Simulation(**configs)
         sim.run()
         

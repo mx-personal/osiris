@@ -57,6 +57,8 @@ class Clock(object):
             'ts': self.time,
             'ts - time': self.time.time(),
             'ts - hour': round_to_hour(self.time),
+            'duration - m': self.time_step.minutes,
+            'week number': self.time.isocalendar().week,
             'date': self.time.date(),
             'period - day': self.period_day,
             'period - week': self.period_week,

@@ -68,3 +68,56 @@ def average_scores(results: pd.DataFrame) -> Dict:
         })
     output['total'] = mean_scores['total']
     return output
+
+
+def evals(results: pd.DataFrame) -> Dict:
+    actions = results['actions'].columns
+    analytics = pd.DataFrame(
+        index=results.index,
+        data={
+            **{'date': results['clock']['date'],
+               'period': results['clock']['duration - m'],
+               'ts': results['clock']['ts'],
+               'week': results['clock']['week number']
+               },
+            **{c: results['actions'][c] for c in actions}
+        }
+    )
+    
+    daily_analytics = analytics.groupby('date').agg({
+        **{c: 'sum' for c in actions},
+        **{'period': 'mean'},
+        **{'week': 'first'},
+    })
+
+
+    for action in actions:
+        daily_analytics[action] *= (daily_analytics['period'] / 60)
+
+    weekly_analytics = daily_analytics.groupby('week').sum().drop('period', axis=1)
+
+    output_day = pd.DataFrame(index=daily_analytics.index)
+    output_day['sleep_h_ok'] = daily_analytics['sleep'] > 8
+
+    output_week = pd.DataFrame(index=weekly_analytics.index)
+    output_week['relax_h_ok'] = weekly_analytics['relax'] > 20
+    output_week['clean_h_ok'] = weekly_analytics['cleanup'] > 3
+    
+    # analytics_night = analytics[(analytics['ts'].dt.hour < 4) | (analytics['ts'].dt.hour > 23)].copy()
+    analytics_night = analytics[(analytics['ts'].dt.hour < 5)].copy()
+    analytics_noon = analytics[(analytics['ts'].dt.hour > 12) & (analytics['ts'].dt.hour < 14)]
+    analytics_evening = analytics[(analytics['ts'].dt.hour > 18) & (analytics['ts'].dt.hour < 23)]
+    analytics_night['is_sleeping'] = (analytics_night['sleep'] == 1)
+    output_day['sleep_at_night'] = analytics_night.groupby('date')['is_sleeping'].all()
+    output_day['eats_at_noon'] = (analytics_noon.groupby('date')['eat'].sum() >= 1)
+    output_day['eats_at_eve'] = (analytics_evening.groupby('date')['eat'].sum() >= 1)
+    output_day['clean_h_ok'] = (daily_analytics['cleanup'] > 15 / 60)
+    return {
+        'd_sleeps_enough': float((output_day['sleep_h_ok'] == False).sum() / len(output_day)),
+        'd_sleeps_at_night': float((output_day['sleep_at_night'] == False).sum() / len(output_day)),
+        'd_eats_at_noon': float((output_day['eats_at_noon'] == False).sum() / len(output_day)),
+        'd_eats_at_eve': float((output_day['eats_at_eve'] == False).sum() / len(output_day)),
+        'w_enough_relax': float((output_week['relax_h_ok'] == False).sum() / len(output_week)),
+        'w_cleans_enough': float((output_week['clean_h_ok'] == False).sum() / len(output_week)),
+        'd_cleans_enough': float((output_day['clean_h_ok'] == False).sum() / len(output_day)),
+    }

@@ -4,7 +4,8 @@ from src import (
     Simulation,
     activities_summary,
     typical_day,
-    average_scores
+    average_scores,
+    evals,
 )
 
 def summary(simulation: Simulation):
@@ -52,6 +53,8 @@ def summary(simulation: Simulation):
 
 
 if __name__ == "__main__":
-    simulation = Simulation(config=OUTPUT_DIR / "optimised.yaml")
+    simulation = Simulation(config=OUTPUT_DIR / "optimised-2.yaml")
     simulation.run()
-    summary(simulation)
+    # summary(simulation)
+    losses = evals(simulation.results)
+    import pdb;pdb.set_trace()
