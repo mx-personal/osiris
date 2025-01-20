@@ -51,10 +51,15 @@ def summary(simulation: Simulation):
     results.to_csv(OUTPUT_DIR / "details.csv")
 
 
-
 if __name__ == "__main__":
-    simulation = Simulation(config=OUTPUT_DIR / "optimised-2.yaml")
+    # for idx in range(50):
+    #     simulation = Simulation(config=OUTPUT_DIR / f"optimised-{idx}.yaml")
+    #     simulation.run()
+    #     print(f'agent {idx}')
+    #     print(average_scores(simulation.results)['total'])
+
+    simulation = Simulation(config=OUTPUT_DIR / f"optimised-24.yaml")
     simulation.run()
-    # summary(simulation)
+    summary(simulation)
     losses = evals(simulation.results)
-    import pdb;pdb.set_trace()
+    # import pdb;pdb.set_trace()

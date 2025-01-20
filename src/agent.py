@@ -30,17 +30,24 @@ class Agent (object):
             cleanup_factor: float,
             cleanup_eff_in: float,
             cleanup_eff_out: float,
+            wash_fill_rate: float,
+            wash_factor: float,
+            wash_eff_in: float,
+            wash_eff_out: float,
         ):
         self.name = name
         self.commodities = {
             'hunger': 100,
             'energy': 100,
             'fun': 100,
-            'environment': 100,
+            # 'environment': 100,
+            'hygiene_self': 100,
+            'hygiene_env': 100,
         }
         self.signals_int = {
             'drowsy': -1,
         }
+
         self.state = 'awake'
         self.happiness = happiness_score(self.commodities)
         hours_working = {
@@ -52,6 +59,7 @@ class Agent (object):
             5: [],
             6: [],
         }
+
 
         self.types_days = {k: "work" if len(v) > 0 else "off" for k, v in hours_working.items()}
 
@@ -96,14 +104,22 @@ class Agent (object):
                 factor=cleanup_factor,
                 effort_in=cleanup_eff_in,
                 effort_out=cleanup_eff_out,
-            )
+            ),
+            action.Wash(
+                fill_rate=wash_fill_rate,
+                factor=wash_factor,
+                effort_in=wash_eff_in,
+                effort_out=wash_eff_out,
+            ),
         ]
 
         self.update_time = {
             'hunger': -4 * hours_step,
             'energy': -4 * hours_step,
             'fun': -1 * hours_step,
-            'environment': -1 * hours_step, # TODO make decrease only when home
+            'hygiene_self': -4 * hours_step,
+            'hygiene_env': -0.6 * hours_step,
+            # 'environment': -1 * hours_step, # TODO make decrease only when home
         }
 
         self.utils = []
@@ -143,11 +159,11 @@ class Agent (object):
             self.update_commodities(action_picked.rw_commod)
         except:
             import pdb;pdb.set_trace()
+        self.update_signals_int(ts)
         self.update_commodities(self.update_time)
         self.happiness = happiness_score(self.commodities)
         self.state = action_picked.name
         self.current_action = action_picked
-        self.update_signals_int(ts)
         self.utilities = {action.name: util for action, util in zip(self.actions, utils)}
 
     def update_commodities(self,update:Dict):
@@ -156,17 +172,20 @@ class Agent (object):
 
 def happiness_score(commodities):
     def scoring(val):
-        if val < 25:
-            return 0.0
-        elif val < 50:
-            return 1.0
-        else:
-            return 2.0
+        return val / 100
+    # def scoring(val):
+    #     if val < 25:
+    #         return 0.0
+    #     elif val < 50:
+    #         return 1.0
+    #     else:
+    #         return 2.0
     importance = {
-        "hunger": 3,
-        "energy": 2,
-        "fun": 1,
-        "environment": 1,
+        "hunger": 25,
+        "energy": 25,
+        "hygiene-self": 25,
+        "hygiene-env": 15,
+        "fun": 10,
     }
     output = {k: scoring(commodities[k]) for k in commodities}
     output['total'] = sum([weight * score for weight, score in zip(importance.values(), output.values())]) / sum(importance.values())

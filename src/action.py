@@ -143,12 +143,33 @@ class CleanUp(ActionGeneric):
                 bonus_state = self.effort_out
             else:
                 bonus_state = - self.effort_in
-            return min(1, bonus_state + base_utility(commodities['environment']))
+            return min(1, bonus_state + base_utility(commodities['hygiene_env']))
 
         super().__init__(
             name="cleanup",
             utility=utility,
-            rw_commod={'environment': cleanup_fill_rate},
+            rw_commod={'hygiene_env': cleanup_fill_rate},
+            effort_in=effort_in,
+            effort_out=effort_out,
+        )
+
+
+class Wash(ActionGeneric):
+    def __init__(self, fill_rate:float, effort_in: float, effort_out: float, factor: float):
+        self.factor = factor
+        base_utility = func._util_inf_free(factor)
+
+        def utility(ts, state_curr, signals: Dict, commodities: Dict):
+            if state_curr == self.name:
+                bonus_state = self.effort_out
+            else:
+                bonus_state = - self.effort_in
+            return min(1, bonus_state + base_utility(commodities['hygiene_self']))
+
+        super().__init__(
+            name="wash",
+            utility=utility,
+            rw_commod={'hygiene_self': fill_rate},
             effort_in=effort_in,
             effort_out=effort_out,
         )

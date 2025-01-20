@@ -1,0 +1,26 @@
+agent:
+  bored_thresh: 0.10346499725060837
+  cleanup_eff_in: 0.5194793488593127
+  cleanup_eff_out: 0.21254253869430023
+  cleanup_factor: 1.6416845863891902
+  cleanup_fill_rate: 13.13199482008367
+  eat_eff_in: 0.1635071209663398
+  eat_eff_out: 0.03939559778968771
+  eat_factor: 1.5041714177791938
+  eat_fill_rate: 20.310627605948774
+  relax_eff_in: 0.9596467798437778
+  relax_eff_out: 0.23480894823422216
+  relax_factor: 1.5446334372238655
+  relax_fill_rate: 55.12768838982872
+  sleep_eff_in: 0.10778098391302432
+  sleep_eff_out: 0.2464798850837132
+  sleep_factor_day: 1.9828332661137318
+  sleep_factor_night: 1.2191971990253483
+  sleep_fill_rate: 86.11438617928351
+  wash_eff_in: 0.18502158104022248
+  wash_eff_out: 0.19128336044043315
+  wash_factor: 1.0750936139725589
+  wash_fill_rate: 63.460177525124095
+clock:
+  time_step_min: 15
+  ts_start: 2024-01-01 00:00:00

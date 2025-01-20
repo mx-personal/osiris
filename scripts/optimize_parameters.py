@@ -177,8 +177,12 @@ sim_params = [
     Parameter(name='cleanup_eff_in', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
     Parameter(name='cleanup_eff_out', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
 
-    Parameter(name='bored_thresh', default=0.20, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
+    Parameter(name='wash_fill_rate', default=50, lbound=_LBOUND_FILL, ubound=_UBOUND_FILL),
+    Parameter(name='wash_factor', default=1, lbound=_LBOUND_FACTOR, ubound=_UBOUND_FACTOR),
+    Parameter(name='wash_eff_in', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
+    Parameter(name='wash_eff_out', default=1, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
 
+    Parameter(name='bored_thresh', default=0.20, lbound=_LBOUND_EFF, ubound=_UBOUND_EFF),
 ]
 
 if __name__ == "__main__":
@@ -193,7 +197,7 @@ if __name__ == "__main__":
     for include in includes:
         print(f"running simulation for {include}")
         func = objective_function(sim_params, include=include)
-        for id_agent in range(5):
+        for id_agent in range(100):
             print(f"running optim for agent {id_agent}")
             result = differential_evolution(
                 func,
@@ -217,6 +221,9 @@ if __name__ == "__main__":
                     'commodities': average_scores(sim.results)['commodities'],
                 }
             )
+            loss = compute_loss(sim.results, include)
+            score = average_scores(sim.results)['total']
+            print(f'results for agent {id_agent}: losses={loss} & happiness={score}')
         from pprint import pprint
         pprint(results)
         import pdb;pdb.set_trace()
@@ -232,4 +239,3 @@ if __name__ == "__main__":
 
         summary(sim)
         import pdb;pdb.set_trace()
-    

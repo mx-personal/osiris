@@ -102,8 +102,8 @@ def evals(results: pd.DataFrame) -> Dict:
     output_week = pd.DataFrame(index=weekly_analytics.index)
     output_week['relax_h_ok'] = weekly_analytics['relax'] > 20
     output_week['clean_h_ok'] = weekly_analytics['cleanup'] > 3
-    
-    # analytics_night = analytics[(analytics['ts'].dt.hour < 4) | (analytics['ts'].dt.hour > 23)].copy()
+
+    analytics_morning = analytics[(analytics['ts'].dt.hour > 5) & (analytics['ts'].dt.hour < 9)]
     analytics_night = analytics[(analytics['ts'].dt.hour < 5)].copy()
     analytics_noon = analytics[(analytics['ts'].dt.hour > 12) & (analytics['ts'].dt.hour < 14)]
     analytics_evening = analytics[(analytics['ts'].dt.hour > 18) & (analytics['ts'].dt.hour < 23)]
@@ -112,6 +112,8 @@ def evals(results: pd.DataFrame) -> Dict:
     output_day['eats_at_noon'] = (analytics_noon.groupby('date')['eat'].sum() >= 1)
     output_day['eats_at_eve'] = (analytics_evening.groupby('date')['eat'].sum() >= 1)
     output_day['clean_h_ok'] = (daily_analytics['cleanup'] > 15 / 60)
+    output_day['washes_morning'] = (analytics_morning.groupby('date')['wash'].sum() >= 1)
+    output_day['washes_eve'] = (analytics_evening.groupby('date')['wash'].sum() >= 1)
     return {
         'd_sleeps_enough': float((output_day['sleep_h_ok'] == False).sum() / len(output_day)),
         'd_sleeps_at_night': float((output_day['sleep_at_night'] == False).sum() / len(output_day)),
@@ -119,5 +121,6 @@ def evals(results: pd.DataFrame) -> Dict:
         'd_eats_at_eve': float((output_day['eats_at_eve'] == False).sum() / len(output_day)),
         'w_enough_relax': float((output_week['relax_h_ok'] == False).sum() / len(output_week)),
         'w_cleans_enough': float((output_week['clean_h_ok'] == False).sum() / len(output_week)),
-        'd_cleans_enough': float((output_day['clean_h_ok'] == False).sum() / len(output_day)),
+        'd_washes_morning': float((output_day['washes_morning'] == False).sum() / len(output_day)),
+        'd_washes_eve': float((output_day['washes_eve'] == False).sum() / len(output_day)),
     }
