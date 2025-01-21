@@ -70,7 +70,7 @@ def average_scores(results: pd.DataFrame) -> Dict:
     return output
 
 
-def evals(results: pd.DataFrame) -> Dict:
+def evals(results: pd.DataFrame) -> float:
     actions = results['actions'].columns
     analytics = pd.DataFrame(
         index=results.index,
@@ -114,7 +114,7 @@ def evals(results: pd.DataFrame) -> Dict:
     output_day['clean_h_ok'] = (daily_analytics['cleanup'] > 15 / 60)
     output_day['washes_morning'] = (analytics_morning.groupby('date')['wash'].sum() >= 1)
     output_day['washes_eve'] = (analytics_evening.groupby('date')['wash'].sum() >= 1)
-    return {
+    output = {
         'd_sleeps_enough': float((output_day['sleep_h_ok'] == False).sum() / len(output_day)),
         'd_sleeps_at_night': float((output_day['sleep_at_night'] == False).sum() / len(output_day)),
         'd_eats_at_noon': float((output_day['eats_at_noon'] == False).sum() / len(output_day)),
@@ -124,3 +124,23 @@ def evals(results: pd.DataFrame) -> Dict:
         'd_washes_morning': float((output_day['washes_morning'] == False).sum() / len(output_day)),
         'd_washes_eve': float((output_day['washes_eve'] == False).sum() / len(output_day)),
     }
+
+    weights = {
+        'd_sleeps_enough': 3,
+        'd_sleeps_at_night': 3,
+        'd_eats_at_noon': 1,
+        'd_eats_at_eve': 2,
+        'w_enough_relax': 1,
+        'w_cleans_enough': 1,
+        'd_washes_morning': 2,
+        'd_washes_eve': 2,
+    }
+
+    final_score = sum([weights[k] * output[k] for k in output.keys()]) / sum(weights.values())
+    return final_score
+
+def loss_combined(results: pd.DataFrame) -> float:
+    loss_habits = evals(results)
+    loss_happiness = average_scores(results)['total']
+
+    return (2 * loss_habits + loss_happiness) / 3

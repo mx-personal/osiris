@@ -12,7 +12,7 @@ import pandas as pd
 from src import typical_day, evals
 import yaml
 from dataclasses import dataclass
-from src import average_scores
+from src import average_scores, loss_combined
 
 class Parameter:
     name: str
@@ -92,10 +92,10 @@ def compute_loss(
     _HAPPINESS = "happiness"
     _AVERAGES = "average"
     _GOOD_HABITS = 'habits'
-    
+    _COMBINED = 'combined'
 
     for mode in include:
-        assert mode in [_HAPPINESS, _SCHEDULE_OFF, _SCHEDULE_WORK, _AVERAGES, _GOOD_HABITS]
+        assert mode in [_HAPPINESS, _SCHEDULE_OFF, _SCHEDULE_WORK, _AVERAGES, _GOOD_HABITS, _COMBINED]
 
     if _SCHEDULE_OFF in include:
         losses[_SCHEDULE_OFF] = loss_schedule(results, "off", _TARGET_SCHEDULE['off'])
@@ -106,10 +106,11 @@ def compute_loss(
     if _HAPPINESS in include:
         losses[_HAPPINESS] = loss_happiness(results)
     if _GOOD_HABITS in include:
-        loss_habits = evals(results)
         # output_str = ",".join([f'{k}:' + '{:.3f}'.format(v) for k,v in losses.items()])
         # print(output_str)
-        losses[_GOOD_HABITS] = sum(loss_habits.values()) / len(loss_habits.values())
+        losses[_GOOD_HABITS] = evals(results)
+    if _COMBINED in include:
+        losses[_COMBINED] = loss_combined(results)
 
     return losses
 
@@ -192,12 +193,13 @@ if __name__ == "__main__":
     # includes = [['schedule_off', 'schedule_work']]
     # includes = [['schedule_work', 'schedule_off', 'happiness']]
     # includes = [['schedule_work', 'happiness']]
-    includes = [['habits']]
+    # includes = [['habits']]
+    includes = [['combined']]
     results = []
     for include in includes:
         print(f"running simulation for {include}")
         func = objective_function(sim_params, include=include)
-        for id_agent in range(100):
+        for id_agent in range(1):
             print(f"running optim for agent {id_agent}")
             result = differential_evolution(
                 func,

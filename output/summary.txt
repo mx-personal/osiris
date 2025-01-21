@@ -1,45 +1,17 @@
-timestamp simulation: 2025-01-18 19:09:08.458313 
-total score: 0.7980907209478616 
+timestamp simulation: 2025-01-21 09:23:33.831977 
+total score: 0.023706793981481337 
 
 SCORES DETAILS 
-hunger (average / score): 85.03 / 0.85
-energy (average / score): 90.11 / 0.9
-fun (average / score): 79.31 / 0.79
-hygiene_self (average / score): 57.4 / 0.57
-hygiene_env (average / score): 75.89 / 0.76
+hunger (average / score): 1.15 / 0.01
+energy (average / score): 1.15 / 0.01
+fun (average / score): 3.42 / 0.03
+hygiene_self (average / score): 1.15 / 0.01
+hygiene_env (average / score): 7.7 / 0.08
 
 TYPICAL OFF DAY 
 date: 2024-01-06 
-00:00-07:15 (7h15m): sleep 
-07:30-07:30 (0h0m): eat 
-07:45-07:45 (0h0m): wash 
-08:00-08:15 (0h15m): eat 
-08:30-09:30 (1h0m): bored 
-09:45-09:45 (0h0m): eat 
-10:00-11:00 (1h0m): bored 
-11:15-11:15 (0h0m): eat 
-11:30-12:30 (1h0m): bored 
-12:45-12:45 (0h0m): eat 
-13:00-13:30 (0h30m): bored 
-13:45-22:30 (8h45m): sleep 
-22:45-23:00 (0h15m): eat 
-23:15-23:15 (0h0m): wash 
-23:30-23:45 (0h15m): bored 
+00:00-23:45 (23h45m): sleep 
 
 TYPICAL WORKING DAY 
-date: 2024-01-10 
-00:00-07:15 (7h15m): sleep 
-07:30-07:30 (0h0m): eat 
-07:45-07:45 (0h0m): wash 
-08:00-08:15 (0h15m): eat 
-08:30-09:00 (0h30m): bored 
-09:15-13:00 (3h45m): work 
-13:15-13:15 (0h0m): eat 
-13:30-13:30 (0h0m): bored 
-13:45-14:00 (0h15m): sleep 
-14:15-19:00 (4h45m): work 
-19:15-19:15 (0h0m): eat 
-19:30-21:15 (1h45m): relax 
-21:30-21:30 (0h0m): eat 
-21:45-21:45 (0h0m): wash 
-22:00-23:45 (1h45m): sleep 
+date: 2024-01-02 
+00:00-23:45 (23h45m): sleep 

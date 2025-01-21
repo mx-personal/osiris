@@ -6,6 +6,7 @@ from src import (
     typical_day,
     average_scores,
     evals,
+    loss_combined,
 )
 
 def summary(simulation: Simulation):
@@ -51,6 +52,7 @@ def summary(simulation: Simulation):
     results.to_csv(OUTPUT_DIR / "details.csv")
 
 
+
 if __name__ == "__main__":
     # for idx in range(50):
     #     simulation = Simulation(config=OUTPUT_DIR / f"optimised-{idx}.yaml")
@@ -58,8 +60,7 @@ if __name__ == "__main__":
     #     print(f'agent {idx}')
     #     print(average_scores(simulation.results)['total'])
 
-    simulation = Simulation(config=OUTPUT_DIR / f"optimised-24.yaml")
+    simulation = Simulation(config=OUTPUT_DIR / f"optimised-0.yaml")
     simulation.run()
     summary(simulation)
-    losses = evals(simulation.results)
-    # import pdb;pdb.set_trace()
+    import pdb;pdb.set_trace()
